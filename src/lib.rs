@@ -1,12 +1,8 @@
 #![allow(dead_code)]
 use serde::Deserialize;
 use std::collections::HashMap;
-
-#[derive(Debug, Deserialize)]
-pub struct ApiResponse {
-    data: Data,
-    success: bool,
-}
+mod common;
+pub use common::ApiResponse;
 
 #[derive(Debug, Deserialize)]
 pub struct Data {
