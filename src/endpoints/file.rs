@@ -3,5 +3,5 @@ use std::collections::HashMap;
 
 #[derive(Debug, Deserialize)]
 pub struct Data {
-    // Fields specific to the 'file' endpoint
+    pub url: String,
 }
