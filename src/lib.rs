@@ -18,9 +18,9 @@ pub enum V1 {
 impl AsRef<str> for V0 {
     fn as_ref(&self) -> &str {
         match self {
-            V0::User => "/user",
-            V0::Image => "/image/generation",
-            V0::File => "/file/upload",
+            V0::User => "/v0/user",
+            V0::Image => "/v0/image/generation",
+            V0::File => "/v0/file/upload",
         }
     }
 }
@@ -28,8 +28,8 @@ impl AsRef<str> for V0 {
 impl AsRef<str> for V1 {
     fn as_ref(&self) -> &str {
         match self {
-            V1::Models => "/models",
-            V1::Completion => "/prompt/completion",
+            V1::Models => "/v1/models",
+            V1::Completion => "/v1/prompt/completion",
         }
     }
 }
