@@ -12,11 +12,11 @@ pub struct ChatModel {
     pub model: String,
     pub word_limit: u32,
     pub max_output: u16,
-    pub pricing: Pricing,
+    pub pricing: ChatPricing,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Pricing {
+pub struct ChatPricing {
     pub coins: u8,
     pub words: u8,
 }
