@@ -3,6 +3,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 mod common;
 pub use common::ApiResponse;
+pub mod endpoints;
 
 #[derive(Debug, Deserialize)]
 pub struct Data {
