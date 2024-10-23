@@ -4,8 +4,8 @@ use serde::Serialize;
 
 use crate::common::ApiResponse;
 use crate::endpoints::completion::{CompletionRequest, CompletionsData};
-use crate::endpoints::image::{ImageRequest, ImageData};
-use crate::{BASE_URL, V0, V1};
+use crate::endpoints::image::{ImageData, ImageRequest};
+use crate::{Endpoint, BASE_URL};
 
 pub struct Client {
     client: ReqwestClient,
@@ -20,7 +20,7 @@ impl Client {
         }
     }
 
-    pub async fn post<T, R>(&self, endpoint: impl AsRef<str>, payload: &T) -> ApiResponse<R>
+    pub async fn post<T, R>(&self, endpoint: Endpoint, payload: &T) -> ApiResponse<R>
     where
         T: Serialize + ?Sized,
         R: DeserializeOwned,
@@ -29,8 +29,8 @@ impl Client {
         let response = self
             .client
             .post(&url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
-            .json(payload)
+            .bearer_auth(&self.api_key)
+            .json(&payload)
             .send()
             .await?;
 
@@ -38,10 +38,10 @@ impl Client {
     }
 
     pub async fn create_image(&self, request: &ImageRequest) -> ApiResponse<ImageData> {
-        self.post(V0::Image, request).await
+        self.post(Endpoint::Image, request).await
     }
 
-    pub async fn create_completion(&self, request: &CompletionRequest) -> ApiResponse<CompletionsData> {
-        self.post(V1::Completion, request).await
+    pub async fn completion(&self, request: &CompletionRequest) -> ApiResponse<CompletionsData> {
+        self.post(Endpoint::Completion, request).await
     }
 }

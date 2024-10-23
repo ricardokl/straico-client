@@ -1,39 +1,27 @@
-mod common;
 mod client;
-pub use common::ApiResponse;
+pub mod common;
 pub use client::Client;
+pub use common::ApiResponse;
 pub mod endpoints;
 
 pub const BASE_URL: &str = "https://api.straico.com";
 
-pub enum V0 {
+pub enum Endpoint {
     User,
     Image,
     File,
-    UserApiKeysGetByDate,
-}
-
-pub enum V1 {
     Models,
     Completion,
 }
 
-impl AsRef<str> for V0 {
+impl AsRef<str> for Endpoint {
     fn as_ref(&self) -> &str {
         match self {
-            V0::User => "/v0/user",
-            V0::Image => "/v0/image/generation",
-            V0::File => "/v0/file/upload",
-            V0::UserApiKeysGetByDate => "/v0/user/api-keys/get-by-date",
-        }
-    }
-}
-
-impl AsRef<str> for V1 {
-    fn as_ref(&self) -> &str {
-        match self {
-            V1::Models => "/v1/models",
-            V1::Completion => "/v1/prompt/completion",
+            Endpoint::User => "/v0/user",
+            Endpoint::Image => "/v0/image/generation",
+            Endpoint::File => "/v0/file/upload",
+            Endpoint::Models => "/v1/models",
+            Endpoint::Completion => "/v1/prompt/completion",
         }
     }
 }

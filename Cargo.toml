@@ -1,12 +1,4 @@
 [package]
-name = "straico-client"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-reqwest = { version = "0.12.8", features = ["json"] }
-serde = { version = "1.0.211", features = ["derive"] }
-[package]
 name = "straico"
 version = "0.1.0"
 edition = "2021"
@@ -14,9 +6,9 @@ description = "Rust client for the Straico API"
 license = "MIT"
 
 [dependencies]
-reqwest = { version = "0.11", features = ["json"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+reqwest = { version = "0.12.8", features = ["json"] }
+serde = { version = "1.0.211", features = ["derive"] }
+serde_json = "1.0.132"
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["full"] }

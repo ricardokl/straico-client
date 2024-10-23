@@ -3,12 +3,12 @@ use serde::Deserialize;
 use serde_json::Error as SerdeError;
 
 #[derive(Debug, Deserialize)]
-pub struct ApiResponse<T> {
+pub struct ApiResponseData<T> {
     pub data: T,
     pub success: bool,
 }
 
-pub type ApiResponse<T> = Result<T, ApiError>;
+pub type ApiResponse<T> = Result<ApiResponseData<T>, ApiError>;
 
 #[derive(Debug)]
 pub enum ApiError {
