@@ -1,5 +1,7 @@
 mod common;
+mod client;
 pub use common::ApiResponse;
+pub use client::Client;
 pub mod endpoints;
 
 pub const BASE_URL: &str = "https://api.straico.com";

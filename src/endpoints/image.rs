@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct Price {
@@ -12,4 +12,12 @@ pub struct ImageData {
     pub zip: String,
     pub images: Vec<String>,
     pub price: Price,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ImageRequest {
+    pub model: String,
+    pub description: String,
+    pub size: String,
+    pub variations: u8,
 }

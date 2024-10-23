@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Deserialize)]
@@ -56,4 +56,15 @@ pub struct Choice {
 pub struct Message {
     content: String,
     role: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CompletionRequest {
+    pub models: Vec<String>,
+    pub file_urls: Vec<String>,
+    pub youtube_urls: Vec<String>,
+    pub message: String,
+    pub display_transcripts: bool,
+    pub temperature: f32,
+    pub max_tokens: u32,
 }
