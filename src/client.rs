@@ -18,17 +18,35 @@ pub struct Client<A> {
     api_key: A,
 }
 
-impl<A: fmt::Display> Client<A> {
-    pub fn new(api_key: A) -> Self
-    where
-        A: fmt::Display,
-    {
+pub struct NoKey;
+pub struct WithKey<K: fmt::Display>(K);
+
+impl<K: fmt::Display> fmt::Display for WithKey<K> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl Client<NoKey> {
+    pub fn new() -> Client<NoKey> {
         Self {
             client: ReqwestClient::new(),
-            api_key,
+            api_key: NoKey,
         }
     }
 
+    pub fn set_key<K>(self, key: K) -> Client<WithKey<K>>
+    where
+        K: fmt::Display,
+    {
+        Client {
+            client: self.client,
+            api_key: WithKey::<K>(key),
+        }
+    }
+}
+
+impl<K: fmt::Display> Client<WithKey<K>> {
     pub async fn post<T, R>(&self, endpoint: &PostEndpoint, payload: &T) -> ApiResponse<R>
     where
         T: Serialize + ?Sized,
