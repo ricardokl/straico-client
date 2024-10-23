@@ -1,28 +1,35 @@
-mod client;
+pub mod client;
 pub mod common;
-
-pub use client::Client;
-pub use common::ApiResponse;
 pub mod endpoints;
 
-pub const BASE_URL: &str = "https://api.straico.com/";
+pub const BASE_URL: &str = "https://platform.neural.space";
 
-pub enum Endpoint {
+pub enum GetEndpoint {
     User,
-    Image,
-    File,
     Models,
+    File,
+}
+
+pub enum PostEndpoint {
+    Image,
     Completion,
 }
 
-impl AsRef<str> for Endpoint {
+impl AsRef<str> for GetEndpoint {
     fn as_ref(&self) -> &str {
         match self {
-            Endpoint::User => "/v0/user",
-            Endpoint::Image => "/v0/image/generation",
-            Endpoint::File => "/v0/file/upload",
-            Endpoint::Models => "/v1/models",
-            Endpoint::Completion => "/v1/prompt/completion",
+            GetEndpoint::User => "/v0/user",
+            GetEndpoint::Models => "/v1/models",
+            GetEndpoint::File => "/v0/file/upload",
+        }
+    }
+}
+
+impl AsRef<str> for PostEndpoint {
+    fn as_ref(&self) -> &str {
+        match self {
+            PostEndpoint::Image => "/v0/image/generation",
+            PostEndpoint::Completion => "/v1/prompt/completion",
         }
     }
 }
