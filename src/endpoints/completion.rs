@@ -61,10 +61,10 @@ pub struct Message {
 #[derive(Serialize)]
 pub struct CompletionRequest {
     pub models: Vec<String>,
-    pub file_urls: Vec<String>,
-    pub youtube_urls: Vec<String>,
+    pub file_urls: Option<Vec<String>>,
+    pub youtube_urls: Option<Vec<String>>,
     pub message: String,
-    pub display_transcripts: bool,
-    pub temperature: f32,
-    pub max_tokens: u32,
+    pub display_transcripts: Option<bool>,
+    pub temperature: Option<f32>,
+    pub max_tokens: Option<u32>,
 }
