@@ -1,10 +1,11 @@
 mod client;
 pub mod common;
+
 pub use client::Client;
 pub use common::ApiResponse;
 pub mod endpoints;
 
-pub const BASE_URL: &str = "https://api.straico.com";
+pub const BASE_URL: &str = "https://api.straico.com/";
 
 pub enum Endpoint {
     User,

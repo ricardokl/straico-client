@@ -1,64 +1,64 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct CompletionsData {
-    completions: HashMap<String, Model>,
-    overall_price: Price,
-    overall_words: Words,
+    pub completions: HashMap<String, Model>,
+    pub overall_price: Price,
+    pub overall_words: Words,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Price {
-    input: f32,
-    output: f32,
-    total: f32,
+    pub input: f32,
+    pub output: f32,
+    pub total: f32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Words {
-    input: u32,
-    output: u32,
-    total: u32,
+    pub input: u32,
+    pub output: u32,
+    pub total: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Model {
-    completion: Completion,
-    price: Price,
-    words: Words,
+    pub completion: Completion,
+    pub price: Price,
+    pub words: Words,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Completion {
-    choices: Vec<Choice>,
-    id: String,
-    model: String,
-    created: usize,
-    usage: Usage,
+    pub choices: Vec<Choice>,
+    pub id: String,
+    pub model: String,
+    pub created: usize,
+    pub usage: Usage,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Usage {
-    prompt_tokens: u32,
-    completion_tokens: u32,
-    total_token: u32,
+    pub prompt_tokens: u32,
+    pub completion_tokens: u32,
+    pub total_token: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Choice {
-    message: Message,
-    index: u8,
-    finish_reason: String,
+    pub message: Message,
+    pub index: u8,
+    pub finish_reason: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Message {
-    content: String,
-    role: String,
+    pub content: String,
+    pub role: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 pub struct CompletionRequest {
     pub models: Vec<String>,
     pub file_urls: Vec<String>,
