@@ -10,6 +10,7 @@ pub enum V0 {
     User,
     Image,
     File,
+    UserApiKeysGetByDate,
 }
 
 pub enum V1 {
@@ -23,6 +24,7 @@ impl AsRef<str> for V0 {
             V0::User => "/v0/user",
             V0::Image => "/v0/image/generation",
             V0::File => "/v0/file/upload",
+            V0::UserApiKeysGetByDate => "/v0/user/api-keys/get-by-date",
         }
     }
 }
