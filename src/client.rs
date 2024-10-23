@@ -7,7 +7,10 @@ use serde::Serialize;
 
 use crate::common::ApiResponse;
 use crate::endpoints::completion::{CompletionRequest, CompletionsData};
+use crate::endpoints::file::FileData;
 use crate::endpoints::image::{ImageData, ImageRequest};
+use crate::endpoints::model::ModelData;
+use crate::endpoints::user::UserData;
 use crate::{GetEndpoint, PostEndpoint, BASE_URL};
 
 pub struct Client<A> {
@@ -64,5 +67,18 @@ impl<A: fmt::Display> Client<A> {
 
     pub async fn completion(&self, request: &CompletionRequest) -> ApiResponse<CompletionsData> {
         self.post(&PostEndpoint::Completion, request).await
+    }
+
+    pub async fn user(&self) -> ApiResponse<UserData> {
+        self.get(&GetEndpoint::User).await
+    }
+
+    pub async fn models(&self) -> ApiResponse<ModelData> {
+        self.get(&GetEndpoint::Models).await
+    }
+
+    pub async fn file(&self) -> ApiResponse<FileData> {
+        // Needs to implement file upload
+        todo!()
     }
 }
