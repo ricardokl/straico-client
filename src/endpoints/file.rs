@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct Data {
+pub struct FileData {
     pub url: String,
 }

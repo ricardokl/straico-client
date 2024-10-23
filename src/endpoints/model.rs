@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
-pub struct Data {
+pub struct ModelData {
     pub chat: Vec<ChatModel>,
     pub image: Vec<ImageModel>,
 }
