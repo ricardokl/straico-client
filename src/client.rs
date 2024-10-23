@@ -1,16 +1,17 @@
-use core::fmt;
+use core::fmt::{Display, Formatter, Result};
 use reqwest::Url;
 
 use reqwest::Client as ReqwestClient;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::common::ApiResponse;
-use crate::endpoints::completion::{CompletionRequest, CompletionsData};
-use crate::endpoints::file::FileData;
-use crate::endpoints::image::{ImageData, ImageRequest};
-use crate::endpoints::model::ModelData;
-use crate::endpoints::user::UserData;
+use crate::endpoints::{
+    completion::{CompletionRequest, CompletionsData},
+    file::FileData,
+    image::{ImageData, ImageRequest},
+    model::ModelData,
+    user::UserData,
+};
 use crate::{GetEndpoint, PostEndpoint, BASE_URL};
 
 pub struct Client<A> {
@@ -18,17 +19,29 @@ pub struct Client<A> {
     api_key: A,
 }
 
-pub struct NoKey;
-pub struct WithKey<K: fmt::Display>(K);
+impl From<ReqwestClient> for Client<NoKey> {
+    fn from(client: ReqwestClient) -> Self {
+        Client {
+            client,
+            api_key: NoKey,
+        }
+    }
+}
 
-impl<K: fmt::Display> fmt::Display for WithKey<K> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+// Method bearer_auth takes any type that implements Display
+pub struct WithKey<K: Display>(K);
+pub struct NoKey;
+
+impl<K: Display> Display for WithKey<K> {
+    // Passthrough Display
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         self.0.fmt(f)
     }
 }
 
 impl Client<NoKey> {
     pub fn new() -> Client<NoKey> {
+        // Maybe set defaults for client
         Self {
             client: ReqwestClient::new(),
             api_key: NoKey,
@@ -37,8 +50,9 @@ impl Client<NoKey> {
 
     pub fn set_key<K>(self, key: K) -> Client<WithKey<K>>
     where
-        K: fmt::Display,
+        K: Display,
     {
+        // Could also unpack self first and use implicit notation
         Client {
             client: self.client,
             api_key: WithKey::<K>(key),
@@ -46,7 +60,7 @@ impl Client<NoKey> {
     }
 }
 
-impl<K: fmt::Display> Client<WithKey<K>> {
+impl<K: Display> Client<WithKey<K>> {
     pub async fn post<T, R>(&self, endpoint: &PostEndpoint, payload: &T) -> ApiResponse<R>
     where
         T: Serialize + ?Sized,
