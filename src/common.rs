@@ -1,12 +1,12 @@
+use reqwest::Error as ReqwestError;
 use serde::Deserialize;
+use serde_json::Error as SerdeError;
 
 #[derive(Debug, Deserialize)]
 pub struct ApiResponse<T> {
     pub data: T,
     pub success: bool,
 }
-use reqwest::Error as ReqwestError;
-use serde_json::Error as SerdeError;
 
 pub type ApiResponse<T> = Result<T, ApiError>;
 
