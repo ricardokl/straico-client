@@ -28,17 +28,32 @@ impl<A: fmt::Display> Client<A> {
 
     pub async fn post<T, R>(&self, endpoint: &PostEndpoint, payload: &T) -> ApiResponse<R>
     where
-        T: Serialize + ?Sized,
+        T: Serialize +?Sized,
         R: DeserializeOwned,
     {
         let url = Url::parse(BASE_URL)?.join(endpoint.as_ref())?;
         let response = self
-            .client
-            .post(url)
-            .bearer_auth(&self.api_key)
-            .json(&payload)
-            .send()
-            .await?;
+           .client
+           .post(url)
+           .bearer_auth(&self.api_key)
+           .json(&payload)
+           .send()
+           .await?;
+
+        Ok(response.json().await?)
+    }
+
+    pub async fn get<R>(&self, endpoint: &GetEndpoint) -> ApiResponse<R> 
+    where
+        R: DeserializeOwned,
+    {
+        let url = Url::parse(BASE_URL)?.join(endpoint.as_ref())?;
+        let response = self
+           .client
+           .get(url)
+           .bearer_auth(&self.api_key)
+           .send()
+           .await?;
 
         Ok(response.json().await?)
     }
