@@ -12,69 +12,31 @@ use crate::endpoints::{
 };
 use crate::{GetEndpoint, PostEndpoint};
 
-// Method bearer_auth takes any type that implements Display
-pub struct WithKey<K: Display>(K);
-pub struct NoKey;
-
-impl From<ReqwestClient> for StraicoClient<NoKey> {
-    fn from(client: ReqwestClient) -> Self {
-        StraicoClient {
-            client,
-            api_key: NoKey,
-        }
-    }
-}
-
-trait StraicoClientTrait {
-    fn to_straico(self) -> StraicoClient<NoKey>;
-}
-
-impl StraicoClientTrait for ReqwestClient {
-    fn to_straico(self) -> StraicoClient<NoKey> {
-        self.into()
-    }
-}
-
-pub struct StraicoClient<A> {
+pub struct StraicoClient {
     client: ReqwestClient,
-    api_key: A,
+    api_key: String,
 }
 
-impl<K: Display> Display for WithKey<K> {
-    // Passthrough Display
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        self.0.fmt(f)
-    }
-}
-
-impl StraicoClient<NoKey> {
-    pub fn new() -> StraicoClient<NoKey> {
-        // Maybe set defaults for client
-        ReqwestClient::new().to_straico()
-    }
-
-    pub fn set_key<K: Display>(self, key: K) -> StraicoClient<WithKey<K>> {
-        // Could also unpack self first and use implicit notation
-        StraicoClient {
-            client: self.client,
-            api_key: WithKey(key),
+impl StraicoClient {
+    pub fn new(api_key: String) -> Self {
+        Self {
+            client: ReqwestClient::new(),
+            api_key,
         }
     }
-}
 
-impl<K: Display> StraicoClient<WithKey<K>> {
     pub async fn post<T, R>(&self, endpoint: &PostEndpoint, payload: &T) -> ApiResponse<R>
     where
-        T: Serialize + ?Sized,
+        T: Serialize +?Sized,
         R: DeserializeOwned,
     {
         let response = self
-            .client
-            .post(endpoint.as_ref())
-            .bearer_auth(&self.api_key)
-            .json(&payload)
-            .send()
-            .await?;
+           .client
+           .post(endpoint.as_ref())
+           .bearer_auth(&self.api_key)
+           .json(&payload)
+           .send()
+           .await?;
 
         Ok(response.json().await?)
     }
@@ -84,11 +46,11 @@ impl<K: Display> StraicoClient<WithKey<K>> {
         R: DeserializeOwned,
     {
         let response = self
-            .client
-            .get(endpoint.as_ref())
-            .bearer_auth(&self.api_key)
-            .send()
-            .await?;
+           .client
+           .get(endpoint.as_ref())
+           .bearer_auth(&self.api_key)
+           .send()
+           .await?;
 
         Ok(response.json().await?)
     }
