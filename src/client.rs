@@ -10,7 +10,7 @@ use crate::endpoints::{
     model::ModelData,
     user::UserData,
 };
-use crate::{GetEndpoint, PostEndpoint, BASE_URL};
+use crate::{GetEndpoint, PostEndpoint};
 
 // Method bearer_auth takes any type that implements Display
 pub struct WithKey<K: Display>(K);
@@ -68,10 +68,9 @@ impl<K: Display> StraicoClient<WithKey<K>> {
         T: Serialize + ?Sized,
         R: DeserializeOwned,
     {
-        let url = format!("{}{}", BASE_URL, endpoint.as_ref());
         let response = self
             .client
-            .post(url)
+            .post(endpoint.as_ref())
             .bearer_auth(&self.api_key)
             .json(&payload)
             .send()
@@ -84,10 +83,9 @@ impl<K: Display> StraicoClient<WithKey<K>> {
     where
         R: DeserializeOwned,
     {
-        let url = format!("{}{}", BASE_URL, endpoint.as_ref());
         let response = self
             .client
-            .get(url)
+            .get(endpoint.as_ref())
             .bearer_auth(&self.api_key)
             .send()
             .await?;
