@@ -14,23 +14,33 @@ use crate::endpoints::{
 };
 use crate::{GetEndpoint, PostEndpoint, BASE_URL};
 
-pub struct Client<A> {
-    client: ReqwestClient,
-    api_key: A,
-}
+// Method bearer_auth takes any type that implements Display
+pub struct WithKey<K: Display>(K);
+pub struct NoKey;
 
-impl From<ReqwestClient> for Client<NoKey> {
+impl From<ReqwestClient> for StraicoClient<NoKey> {
     fn from(client: ReqwestClient) -> Self {
-        Client {
+        StraicoClient {
             client,
             api_key: NoKey,
         }
     }
 }
 
-// Method bearer_auth takes any type that implements Display
-pub struct WithKey<K: Display>(K);
-pub struct NoKey;
+trait StraicoClientTrait {
+    fn to_straico(self) -> StraicoClient<NoKey>;
+}
+
+impl StraicoClientTrait for ReqwestClient {
+    fn to_straico(self) -> StraicoClient<NoKey> {
+        self.into()
+    }
+}
+
+pub struct StraicoClient<A> {
+    client: ReqwestClient,
+    api_key: A,
+}
 
 impl<K: Display> Display for WithKey<K> {
     // Passthrough Display
@@ -39,28 +49,22 @@ impl<K: Display> Display for WithKey<K> {
     }
 }
 
-impl Client<NoKey> {
-    pub fn new() -> Client<NoKey> {
+impl StraicoClient<NoKey> {
+    pub fn new() -> StraicoClient<NoKey> {
         // Maybe set defaults for client
-        Self {
-            client: ReqwestClient::new(),
-            api_key: NoKey,
-        }
+        ReqwestClient::new().to_straico()
     }
 
-    pub fn set_key<K>(self, key: K) -> Client<WithKey<K>>
-    where
-        K: Display,
-    {
+    pub fn set_key<K: Display>(self, key: K) -> StraicoClient<WithKey<K>> {
         // Could also unpack self first and use implicit notation
-        Client {
+        StraicoClient {
             client: self.client,
-            api_key: WithKey::<K>(key),
+            api_key: WithKey(key),
         }
     }
 }
 
-impl<K: Display> Client<WithKey<K>> {
+impl<K: Display> StraicoClient<WithKey<K>> {
     pub async fn post<T, R>(&self, endpoint: &PostEndpoint, payload: &T) -> ApiResponse<R>
     where
         T: Serialize + ?Sized,
