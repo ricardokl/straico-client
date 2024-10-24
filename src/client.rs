@@ -4,13 +4,28 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::common::ApiResponse;
 use crate::endpoints::{
+    audio::{TranscriptionRequest, TranscriptionData},
     completion::{CompletionRequest, CompletionsData},
+    embeddings::{EmbeddingsRequest, EmbeddingsData},
     file::FileData,
     image::{ImageData, ImageRequest},
     model::ModelData,
     user::UserData,
 };
 use crate::{GetEndpoint, PostEndpoint};
+
+pub trait IntoStraicoClient {
+    fn to_straico(self, api_key: String) -> StraicoClient;
+}
+
+impl IntoStraicoClient for ReqwestClient {
+    fn to_straico(self, api_key: String) -> StraicoClient {
+        StraicoClient {
+            client: self,
+            api_key,
+        }
+    }
+}
 
 pub struct StraicoClient {
     client: ReqwestClient,
@@ -71,8 +86,35 @@ impl StraicoClient {
         self.get(&GetEndpoint::Models).await
     }
 
-    pub async fn file(&self) -> ApiResponse<FileData> {
-        // Needs to implement file upload
-        todo!()
+    pub async fn post_multipart<R>(&self, endpoint: &PostEndpoint, form: Form) -> ApiResponse<R>
+    where
+        R: DeserializeOwned,
+    {
+        let response = self
+            .client
+            .post(endpoint.as_ref())
+            .bearer_auth(&self.api_key)
+            .multipart(form)
+            .send()
+            .await?;
+
+        Ok(response.json().await?)
+    }
+
+    pub async fn upload_file(&self, request: &FileUploadRequest) -> ApiResponse<FileData> {
+        let form = request.to_form().await?;
+        self.post_multipart(&PostEndpoint::File, form).await
+    }
+
+    pub async fn transcribe(&self, request: &TranscriptionRequest) -> ApiResponse<TranscriptionData> {
+        self.post(&PostEndpoint::AudioTranscription, request).await
+    }
+
+    pub async fn generate_audio(&self, request: &GenerationRequest) -> ApiResponse<GenerationData> {
+        self.post(&PostEndpoint::AudioGeneration, request).await
+    }
+
+    pub async fn embeddings(&self, request: &EmbeddingsRequest) -> ApiResponse<EmbeddingsData> {
+        self.post(&PostEndpoint::Embeddings, request).await
     }
 }
