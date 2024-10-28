@@ -3,8 +3,8 @@ pub mod common;
 pub mod endpoints;
 
 pub enum Endpoint {
-    GetEndpoint,
-    PostEndpoint,
+    Get(GetEndpoint),
+    Post(PostEndpoint),
 }
 
 pub enum GetEndpoint {
