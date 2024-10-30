@@ -1,6 +1,7 @@
+#![allow(dead_code)]
 use reqwest::Client as ReqwestClient;
 use reqwest::RequestBuilder as ReqwestBuilder;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::marker::PhantomData;
 
@@ -14,27 +15,17 @@ use crate::endpoints::{
 };
 use crate::{GetEndpoint, PostEndpoint};
 
-pub struct ApiKeyNotSet;
+pub struct NoApiKey;
 pub struct ApiKeySet;
-pub struct PayloadSet;
-pub struct UserNoPayload;
-pub struct ModelsNoPayload;
+pub struct PayloadSet<T = ()>(PhantomData<T>);
+pub struct NoPayload<T>(PhantomData<T>);
+#[derive(Serialize)]
 pub struct FileRequest;
 
-pub struct StraicoRequestBuilder<State, T = ()> {
+pub struct StraicoRequestBuilder<Api = (), Payload = ()> {
     builder: ReqwestBuilder,
-    _payload: PhantomData<T>,
-    _state: PhantomData<State>,
-}
-
-impl<S, T> Default for StraicoRequestBuilder<S, T> {
-    fn default() -> Self {
-        Self {
-            builder: ReqwestClient::new().post(PostEndpoint::Completion.as_ref()),
-            _payload: PhantomData,
-            _state: PhantomData,
-        }
-    }
+    _payload: PhantomData<Payload>,
+    _api: PhantomData<Api>,
 }
 
 pub trait IntoStraicoClient {
@@ -47,55 +38,55 @@ impl IntoStraicoClient for ReqwestClient {
     }
 }
 
-impl From<ReqwestClient> for StraicoClient {
-    fn from(client: ReqwestClient) -> Self {
-        client.to_straico()
-    }
-}
-
 pub struct StraicoClient {
     client: ReqwestClient,
 }
 
-impl<T> StraicoRequestBuilder<ApiKeyNotSet, T> {
-    pub fn set_key<K: Display>(self, api_key: K) -> StraicoRequestBuilder<ApiKeySet, T> {
+impl StraicoClient {
+    pub fn completion(self) -> StraicoRequestBuilder<NoApiKey, CompletionRequest> {
+        self.with(|c| c.post(PostEndpoint::Completion.as_ref()))
+    }
+
+    pub fn image(self) -> StraicoRequestBuilder<NoApiKey, ImageRequest> {
+        self.with(|c| c.post(PostEndpoint::Image.as_ref()))
+    }
+
+    pub fn file(self) -> StraicoRequestBuilder<NoApiKey, FileRequest> {
+        self.with(|c| c.post(PostEndpoint::File.as_ref()))
+    }
+
+    pub fn models(self) -> StraicoRequestBuilder<NoApiKey, NoPayload<ModelData>> {
+        self.with(|c| c.get(GetEndpoint::Models.as_ref()))
+    }
+
+    pub fn user(self) -> StraicoRequestBuilder<NoApiKey, NoPayload<UserData>> {
+        self.with(|c| c.get(GetEndpoint::User.as_ref()))
+    }
+}
+
+impl<T> StraicoRequestBuilder<NoApiKey, T> {
+    pub fn bearer_auth<K: Display>(self, api_key: K) -> StraicoRequestBuilder<ApiKeySet, T> {
         self.with(|b| b.bearer_auth(api_key))
     }
 }
 
-impl<T: Serialize> StraicoRequestBuilder<ApiKeySet, T> {
-    pub fn set_payload(self, payload: &T) -> StraicoRequestBuilder<PayloadSet, T> {
+impl<K, T: Serialize> StraicoRequestBuilder<K, T> {
+    pub fn json(self, payload: &T) -> StraicoRequestBuilder<K, PayloadSet<T>> {
         self.with(|b| b.json(payload))
     }
 }
 
-macro_rules! define_endpoints {
-    ($($ident:ident ($name:ident, $endpoint:path, $payload:ty)),* $(,)?) => {
-        impl StraicoClient {
-            $(
-                pub fn $name(self) -> StraicoRequestBuilder<ApiKeyNotSet, $payload> {
-                    StraicoRequestBuilder::<ApiKeyNotSet, $payload> {
-                        builder: self.client.$ident($endpoint.as_ref()),
-                        ..Default::default()
-                    }
-                }
-            )*
-        }
-    };
-}
-
-define_endpoints! {
-    post(completion, PostEndpoint::Completion, CompletionRequest),
-    post(create_image, PostEndpoint::Image, ImageRequest),
-    post(file, PostEndpoint::File, ImageRequest),
-    get(models, GetEndpoint::Models, ModelsNoPayload),
-    get(user, GetEndpoint::User, UserNoPayload),
+impl<T: for<'a> Deserialize<'a>> StraicoRequestBuilder<ApiKeySet, NoPayload<T>> {
+    pub async fn send(self) -> ApiResponse<T> {
+        let response = self.builder.send().await?;
+        Ok(response.json().await?)
+    }
 }
 
 macro_rules! define_send_methods {
-    ($(($state:ty, $payload:ty, $response:ty)),* $(,)?) => {
+    ($(($payload:ty, $response:ty)),* $(,)?) => {
         $(
-            impl StraicoRequestBuilder<$state, $payload> {
+            impl StraicoRequestBuilder<ApiKeySet, PayloadSet<$payload>> {
                 pub async fn send(self) -> ApiResponse<$response> {
                     let response = self.builder.send().await?;
                     Ok(response.json().await?)
@@ -106,21 +97,33 @@ macro_rules! define_send_methods {
 }
 
 define_send_methods! {
-    (ApiKeySet, UserNoPayload, UserData),
-    (ApiKeySet, ModelsNoPayload, ModelData),
-    (PayloadSet, CompletionRequest, CompletionsData),
-    (PayloadSet, ImageRequest, ImageData),
-    (PayloadSet, FileRequest, FileData),
+    (CompletionRequest, CompletionsData),
+    (ImageRequest, ImageData),
+    (FileRequest, FileData),
 }
 
 impl<State, T> StraicoRequestBuilder<State, T> {
-    pub fn with<F, S, U>(self, f: F) -> StraicoRequestBuilder<S, U>
+    fn with<F, S, U>(self, f: F) -> StraicoRequestBuilder<S, U>
     where
         F: FnOnce(ReqwestBuilder) -> ReqwestBuilder,
     {
         StraicoRequestBuilder {
             builder: f(self.builder),
-            ..Default::default()
+            _payload: PhantomData,
+            _api: PhantomData,
+        }
+    }
+}
+
+impl StraicoClient {
+    fn with<F, S, U>(self, f: F) -> StraicoRequestBuilder<S, U>
+    where
+        F: FnOnce(ReqwestClient) -> ReqwestBuilder,
+    {
+        StraicoRequestBuilder {
+            builder: f(self.client),
+            _payload: PhantomData,
+            _api: PhantomData,
         }
     }
 }
