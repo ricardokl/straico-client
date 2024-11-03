@@ -6,7 +6,7 @@ description = "Rust client for the Straico API"
 license = "MIT"
 
 [dependencies]
-reqwest = { version = "0.12.8", features = ["json"] }
+reqwest = { version = "0.12.8", features = ["json", "multipart", "stream"] }
 serde = { version = "1.0.211", features = ["derive"] }
 serde_json = "1.0.132"
 url = "2.5.2"
