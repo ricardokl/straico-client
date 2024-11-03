@@ -1,41 +1,46 @@
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+#[derive(Deserialize)]
 pub struct ModelData {
-    pub chat: Vec<ChatModel>,
-    pub image: Vec<ImageModel>,
+    chat: Vec<ChatModel>,
+    image: Vec<ImageModel>,
 }
 
-#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+#[derive(Deserialize)]
 pub struct ChatModel {
-    pub name: String,
-    pub model: String,
-    pub word_limit: u32,
-    pub max_output: u16,
-    pub pricing: ChatPricing,
+    name: String,
+    model: String,
+    word_limit: u32,
+    max_output: u16,
+    pricing: ChatPricing,
 }
 
-#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+#[derive(Deserialize)]
 pub struct ChatPricing {
-    pub coins: u8,
-    pub words: u8,
+    coins: u8,
+    words: u8,
 }
 
-#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+#[derive(Deserialize)]
 pub struct ImageModel {
-    pub name: String,
-    pub model: String,
-    pub pricing: ImagePricing,
+    name: String,
+    model: String,
+    pricing: ImagePricing,
 }
 
-#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+#[derive(Deserialize)]
 pub struct ImagePricing {
-    pub square: SizePricing,
-    pub landscape: SizePricing,
-    pub portrait: SizePricing,
+    square: SizePricing,
+    landscape: SizePricing,
+    portrait: SizePricing,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct SizePricing {
     pub coins: u8,
     pub size: String,

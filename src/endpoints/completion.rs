@@ -1,17 +1,18 @@
-#![allow(dead_code)]
 use crate::client::{ApiKeySet, IntoStraicoClient, PayloadSet, StraicoRequestBuilder};
 use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Display;
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
-pub struct CompletionsData {
+pub struct CompletionData {
     completions: HashMap<String, Model>,
     overall_price: Price,
     overall_words: Words,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct Price {
     input: f32,
@@ -19,6 +20,7 @@ pub struct Price {
     total: f32,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct Words {
     input: u32,
@@ -26,6 +28,7 @@ pub struct Words {
     total: u32,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct Model {
     completion: Completion,
@@ -33,6 +36,7 @@ pub struct Model {
     words: Words,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct Completion {
     choices: Vec<Choice>,
@@ -42,6 +46,7 @@ pub struct Completion {
     usage: Usage,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct Usage {
     prompt_tokens: u32,
@@ -49,6 +54,7 @@ pub struct Usage {
     total_token: u32,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct Choice {
     message: Message,
@@ -56,6 +62,7 @@ pub struct Choice {
     finish_reason: String,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct Message {
     content: String,
@@ -73,12 +80,12 @@ pub struct CompletionRequest {
     max_tokens: Option<u32>,
 }
 
-struct ModelsSet(Vec<String>);
-struct MessageSet(String);
-struct ModelsNotSet;
-struct MessageNotSet;
+pub struct ModelsSet(Vec<String>);
+pub struct MessageSet(String);
+pub struct ModelsNotSet;
+pub struct MessageNotSet;
 
-struct CompletionRequestBuilder<T, K> {
+pub struct CompletionRequestBuilder<T, K> {
     models: T,
     message: K,
     file_urls: Option<Vec<String>>,
@@ -89,7 +96,7 @@ struct CompletionRequestBuilder<T, K> {
 }
 
 impl CompletionRequest {
-    fn new() -> CompletionRequestBuilder<ModelsNotSet, MessageNotSet> {
+    pub fn new() -> CompletionRequestBuilder<ModelsNotSet, MessageNotSet> {
         CompletionRequestBuilder {
             models: ModelsNotSet,
             message: MessageNotSet,
@@ -103,7 +110,7 @@ impl CompletionRequest {
 }
 
 impl<T> CompletionRequestBuilder<ModelsNotSet, T> {
-    fn models(self, models: &[&str]) -> CompletionRequestBuilder<ModelsSet, T> {
+    pub fn models(self, models: &[&str]) -> CompletionRequestBuilder<ModelsSet, T> {
         CompletionRequestBuilder {
             models: ModelsSet(models.iter().map(|s| s.to_string()).collect()),
             file_urls: self.file_urls,
@@ -115,7 +122,7 @@ impl<T> CompletionRequestBuilder<ModelsNotSet, T> {
         }
     }
 
-    fn model(self, model: &str) -> CompletionRequestBuilder<ModelsSet, T> {
+    pub fn model(self, model: &str) -> CompletionRequestBuilder<ModelsSet, T> {
         CompletionRequestBuilder {
             models: ModelsSet(vec![model.to_string()]),
             file_urls: self.file_urls,
@@ -129,7 +136,7 @@ impl<T> CompletionRequestBuilder<ModelsNotSet, T> {
 }
 
 impl<T> CompletionRequestBuilder<T, MessageNotSet> {
-    fn message(self, message: &str) -> CompletionRequestBuilder<T, MessageSet> {
+    pub fn message(self, message: &str) -> CompletionRequestBuilder<T, MessageSet> {
         CompletionRequestBuilder {
             models: self.models,
             message: MessageSet(message.into()),
@@ -143,35 +150,35 @@ impl<T> CompletionRequestBuilder<T, MessageNotSet> {
 }
 
 impl<T, K> CompletionRequestBuilder<T, K> {
-    fn file_urls(self, file_urls: Vec<&str>) -> CompletionRequestBuilder<T, K> {
+    pub fn file_urls(self, file_urls: Vec<&str>) -> CompletionRequestBuilder<T, K> {
         CompletionRequestBuilder {
             file_urls: Some(file_urls.iter().map(|s| s.to_string()).collect()),
             ..self
         }
     }
 
-    fn youtube_urls(self, youtube_urls: Vec<&str>) -> CompletionRequestBuilder<T, K> {
+    pub fn youtube_urls(self, youtube_urls: Vec<&str>) -> CompletionRequestBuilder<T, K> {
         CompletionRequestBuilder {
             youtube_urls: Some(youtube_urls.iter().map(|s| s.to_string()).collect()),
             ..self
         }
     }
 
-    fn display_transcripts(self, display_transcripts: bool) -> CompletionRequestBuilder<T, K> {
+    pub fn display_transcripts(self, display_transcripts: bool) -> CompletionRequestBuilder<T, K> {
         CompletionRequestBuilder {
             display_transcripts: Some(display_transcripts),
             ..self
         }
     }
 
-    fn temperature(self, temperature: f32) -> CompletionRequestBuilder<T, K> {
+    pub fn temperature(self, temperature: f32) -> CompletionRequestBuilder<T, K> {
         CompletionRequestBuilder {
             temperature: Some(temperature),
             ..self
         }
     }
 
-    fn max_tokens(self, max_tokens: u32) -> CompletionRequestBuilder<T, K> {
+    pub fn max_tokens(self, max_tokens: u32) -> CompletionRequestBuilder<T, K> {
         CompletionRequestBuilder {
             max_tokens: Some(max_tokens),
             ..self
@@ -180,7 +187,7 @@ impl<T, K> CompletionRequestBuilder<T, K> {
 }
 
 impl CompletionRequestBuilder<ModelsSet, MessageSet> {
-    fn build(self) -> CompletionRequest {
+    pub fn build(self) -> CompletionRequest {
         CompletionRequest {
             models: self.models.0,
             message: self.message.0,
@@ -192,10 +199,10 @@ impl CompletionRequestBuilder<ModelsSet, MessageSet> {
         }
     }
 
-    fn bearer_auth<T: Display>(
+    pub fn bearer_auth<T: Display>(
         self,
         key: T,
-    ) -> StraicoRequestBuilder<ApiKeySet, PayloadSet<CompletionRequest>> {
+    ) -> StraicoRequestBuilder<ApiKeySet, PayloadSet, CompletionData> {
         let payload = self.build();
         ReqwestClient::new()
             .to_straico()

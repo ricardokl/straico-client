@@ -1,50 +1,53 @@
-#![allow(dead_code)]
 use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 use crate::client::{ApiKeySet, IntoStraicoClient, PayloadSet, StraicoRequestBuilder};
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct ImageData {
-    pub zip: String,
-    pub images: Vec<String>,
-    pub price: Price,
+    zip: String,
+    images: Vec<String>,
+    price: Price,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct Price {
-    pub price_per_image: u16,
-    pub quantity_images: u8,
-    pub total: u16,
+    price_per_image: u16,
+    quantity_images: u8,
+    total: u16,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Serialize)]
 pub struct ImageRequest {
-    pub model: String,
-    pub description: String,
-    pub size: String,
-    pub variations: u8,
+    model: String,
+    description: String,
+    size: String,
+    variations: u8,
 }
 
-struct ImageRequestBuilder<T, U, V, W> {
+#[allow(dead_code)]
+pub struct ImageRequestBuilder<T, U, V, W> {
     model: T,
     description: U,
     size: V,
     variations: W,
 }
 
-struct ModelNotSet;
-struct DescriptionNotSet;
-struct SizeNotSet;
-struct VariationsNotSet;
-struct ModelSet(String);
-struct DescriptionSet(String);
-struct SizeSet(String);
-struct VariationsSet(u8);
+pub struct ModelNotSet;
+pub struct DescriptionNotSet;
+pub struct SizeNotSet;
+pub struct VariationsNotSet;
+pub struct ModelSet(String);
+pub struct DescriptionSet(String);
+pub struct SizeSet(String);
+pub struct VariationsSet(u8);
 
 impl ImageRequest {
-    fn new() -> ImageRequestBuilder<ModelNotSet, DescriptionNotSet, SizeNotSet, VariationsNotSet> {
+    pub fn new() -> ImageRequestBuilder<ModelNotSet, DescriptionNotSet, SizeNotSet, VariationsNotSet>
+    {
         ImageRequestBuilder {
             model: ModelNotSet,
             description: DescriptionNotSet,
@@ -55,7 +58,7 @@ impl ImageRequest {
 }
 
 impl<T, U, V> ImageRequestBuilder<ModelNotSet, T, U, V> {
-    fn model(self, model: &str) -> ImageRequestBuilder<ModelSet, T, U, V> {
+    pub fn model(self, model: &str) -> ImageRequestBuilder<ModelSet, T, U, V> {
         ImageRequestBuilder {
             model: ModelSet(model.into()),
             description: self.description,
@@ -66,7 +69,7 @@ impl<T, U, V> ImageRequestBuilder<ModelNotSet, T, U, V> {
 }
 
 impl<T, U, V> ImageRequestBuilder<T, DescriptionNotSet, U, V> {
-    fn description(self, description: &str) -> ImageRequestBuilder<T, DescriptionSet, U, V> {
+    pub fn description(self, description: &str) -> ImageRequestBuilder<T, DescriptionSet, U, V> {
         ImageRequestBuilder {
             model: self.model,
             description: DescriptionSet(description.into()),
@@ -77,7 +80,7 @@ impl<T, U, V> ImageRequestBuilder<T, DescriptionNotSet, U, V> {
 }
 
 impl<T, U, V> ImageRequestBuilder<T, U, SizeNotSet, V> {
-    fn size(self, size: &str) -> ImageRequestBuilder<T, U, SizeSet, V> {
+    pub fn size(self, size: &str) -> ImageRequestBuilder<T, U, SizeSet, V> {
         ImageRequestBuilder {
             model: self.model,
             description: self.description,
@@ -88,7 +91,7 @@ impl<T, U, V> ImageRequestBuilder<T, U, SizeNotSet, V> {
 }
 
 impl<T, U, V> ImageRequestBuilder<T, U, V, VariationsNotSet> {
-    fn variations(self, variations: u8) -> ImageRequestBuilder<T, U, V, VariationsSet> {
+    pub fn variations(self, variations: u8) -> ImageRequestBuilder<T, U, V, VariationsSet> {
         ImageRequestBuilder {
             model: self.model,
             description: self.description,
@@ -99,7 +102,7 @@ impl<T, U, V> ImageRequestBuilder<T, U, V, VariationsNotSet> {
 }
 
 impl ImageRequestBuilder<ModelSet, DescriptionSet, SizeSet, VariationsSet> {
-    fn build(self) -> ImageRequest {
+    pub fn build(self) -> ImageRequest {
         ImageRequest {
             model: self.model.0,
             description: self.description.0,
@@ -108,10 +111,10 @@ impl ImageRequestBuilder<ModelSet, DescriptionSet, SizeSet, VariationsSet> {
         }
     }
 
-    fn bearer_auth<T: Display>(
+    pub fn bearer_auth<T: Display>(
         self,
         key: T,
-    ) -> StraicoRequestBuilder<ApiKeySet, PayloadSet<ImageRequest>> {
+    ) -> StraicoRequestBuilder<ApiKeySet, PayloadSet, ImageData> {
         let payload = self.build();
         ReqwestClient::new()
             .to_straico()

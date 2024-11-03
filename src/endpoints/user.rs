@@ -1,9 +1,10 @@
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+#[derive(Deserialize)]
 pub struct UserData {
-    pub first_name: String,
-    pub last_name: String,
-    pub coins: f32,
-    pub plan: String,
+    first_name: String,
+    last_name: String,
+    coins: f32,
+    plan: String,
 }

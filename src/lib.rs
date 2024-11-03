@@ -2,20 +2,6 @@ pub mod client;
 pub mod common;
 pub mod endpoints;
 
-// pub enum Endpoint {
-//     Get(GetEndpoint),
-//     Post(PostEndpoint),
-// }
-
-// impl AsRef<str> for Endpoint {
-//     fn as_ref(&self) -> &str {
-//         match self {
-//             Endpoint::Get(e) => e.as_ref(),
-//             Endpoint::Post(e) => e.as_ref(),
-//         }
-//     }
-// }
-
 pub enum GetEndpoint {
     User,
     Models,
