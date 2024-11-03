@@ -473,6 +473,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "minijinja"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9ca8daf4b0b4029777f1bc6e1aedd1aec7b74c276a43bc6f620a8e1a1c0a90e"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "miniz_oxide"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -900,6 +909,7 @@ checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
 name = "straico"
 version = "0.1.0"
 dependencies = [
+ "minijinja",
  "reqwest",
  "serde",
  "serde_json",
