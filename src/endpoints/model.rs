@@ -40,8 +40,9 @@ pub struct ImagePricing {
     portrait: SizePricing,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct SizePricing {
-    pub coins: u8,
-    pub size: String,
+    coins: u8,
+    size: String,
 }

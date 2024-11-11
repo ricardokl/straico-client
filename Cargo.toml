@@ -6,6 +6,7 @@ description = "Rust client for the Straico API"
 license = "MIT"
 
 [dependencies]
+actix-web = "4.9.0"
 minijinja = "2.4.0"
 reqwest = { version = "0.12.8", features = ["json", "multipart", "stream"] }
 serde = { version = "1.0.211", features = ["derive"] }

@@ -9,7 +9,8 @@ use std::path::Path;
 
 use crate::common::ApiResponse;
 use crate::endpoints::{
-    completion::{CompletionData, CompletionRequest},
+    completion::completion_request::CompletionRequest,
+    completion::completion_response::CompletionData,
     file::{FileData, FileRequest},
     image::{ImageData, ImageRequest},
     model::ModelData,
@@ -17,8 +18,11 @@ use crate::endpoints::{
 };
 use crate::{GetEndpoint, PostEndpoint};
 
+#[allow(dead_code)]
 pub struct NoApiKey;
+#[allow(dead_code)]
 pub struct ApiKeySet;
+#[allow(dead_code)]
 pub struct PayloadSet;
 
 pub struct StraicoRequestBuilder<Api, Payload, Response> {
@@ -42,12 +46,14 @@ pub struct StraicoClient {
     client: ReqwestClient,
 }
 
-impl StraicoClient {
+impl<'a> StraicoClient {
     pub fn new() -> StraicoClient {
         ReqwestClient::new().to_straico()
     }
 
-    pub fn completion(self) -> StraicoRequestBuilder<NoApiKey, CompletionRequest, CompletionData> {
+    pub fn completion(
+        self,
+    ) -> StraicoRequestBuilder<NoApiKey, CompletionRequest<'a>, CompletionData> {
         self.with(|c| c.post(PostEndpoint::Completion.as_ref()))
     }
 
