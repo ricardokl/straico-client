@@ -5,8 +5,17 @@ edition = "2021"
 description = "Rust client for the Straico API"
 license = "MIT"
 
+[lib]
+name = "straico"
+path = "src/lib.rs"
+
+[[bin]]
+name = "straico-proxy"
+path = "src/main.rs"
+
 [dependencies]
 actix-web = "4.9.0"
+futures = "0.3.31"
 minijinja = "2.4.0"
 reqwest = { version = "0.12.8", features = ["json", "multipart", "stream"] }
 serde = { version = "1.0.211", features = ["derive"] }

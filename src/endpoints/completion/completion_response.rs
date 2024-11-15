@@ -1,10 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
 pub struct CompletionData {
-    completions: HashMap<String, Model>,
+    pub completions: HashMap<String, Model>,
     overall_price: Price,
     overall_words: Words,
 }
@@ -25,43 +24,49 @@ pub struct Words {
     total: u32,
 }
 
-#[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
 pub struct Model {
-    completion: Completion,
+    pub completion: Completion,
     price: Price,
     words: Words,
 }
 
-#[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
 pub struct Completion {
-    choices: Vec<Choice>,
-    id: String,
-    model: String,
-    created: usize,
-    usage: Usage,
+    pub choices: Vec<Choice>,
+    pub object: Box<str>,
+    pub id: Box<str>,
+    pub model: Box<str>,
+    pub created: u64,
+    pub usage: Usage,
 }
 
-#[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
 pub struct Usage {
-    prompt_tokens: u32,
-    completion_tokens: u32,
-    total_token: u32,
+    pub prompt_tokens: u32,
+    pub completion_tokens: u32,
+    pub total_tokens: u32,
 }
 
-#[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
 pub struct Choice {
-    message: Message,
-    index: u8,
-    finish_reason: String,
+    pub message: Message,
+    pub index: u8,
+    pub finish_reason: String,
 }
 
-#[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
 pub struct Message {
-    content: String,
-    role: String,
+    pub content: String,
+    pub role: String,
+}
+
+impl CompletionData {
+    pub fn get_completion(self, model: &str) -> Completion {
+        self.completions
+            .into_iter()
+            .find(|(m, _)| m == model)
+            .map(|(_, c)| c.completion)
+            .unwrap()
+    }
 }

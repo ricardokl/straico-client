@@ -43,7 +43,7 @@ impl FileRequestBuilder<String> {
             .to_straico()
             .file()
             .bearer_auth(key)
-            .form(file)
+            .multipart(file)
             .await
     }
 }

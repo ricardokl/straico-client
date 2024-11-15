@@ -8,8 +8,11 @@ use std::fmt::Display;
 pub struct CompletionRequest<'a> {
     models: RequestModels<'a>,
     message: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
     file_urls: Option<Vec<&'a str>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     youtube_urls: Option<Vec<&'a str>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     display_transcripts: Option<bool>,
     temperature: f32,
     max_tokens: u32,
@@ -55,32 +58,6 @@ pub struct ModelsSet<'a>(RequestModels<'a>);
 pub struct MessageSet<'a>(&'a str);
 pub struct ModelsNotSet;
 pub struct MessageNotSet;
-
-#[derive(Debug)]
-pub struct TooManyModels;
-
-impl<'a> TryFrom<&[&'a str]> for RequestModels<'a> {
-    type Error = TooManyModels;
-
-    fn try_from(value: &[&'a str]) -> Result<Self, Self::Error> {
-        match value.len() {
-            0 => Ok(RequestModels::default()),
-            1..=4 => {
-                let [a, b, c, d] = std::array::from_fn(|i| value.get(i).map(|x| *x));
-                Ok(RequestModels(a, b, c, d))
-            }
-            _ => Err(TooManyModels),
-        }
-    }
-}
-
-impl<'a> TryFrom<Vec<&'a str>> for RequestModels<'a> {
-    type Error = TooManyModels;
-
-    fn try_from(value: Vec<&'a str>) -> Result<Self, Self::Error> {
-        value.as_slice().try_into()
-    }
-}
 
 impl<'a> From<RequestModels<'a>> for ModelsSet<'a> {
     fn from(value: RequestModels<'a>) -> Self {
