@@ -1,8 +1,7 @@
-use reqwest::Client as ReqwestClient;
 use serde::Deserialize;
 use std::{fmt::Display, io::Error, path::Path};
 
-use crate::client::{ApiKeySet, IntoStraicoClient, PayloadSet, StraicoRequestBuilder};
+use crate::client::{ApiKeySet, PayloadSet, StraicoClient, StraicoRequestBuilder};
 
 #[derive(Debug, Deserialize)]
 pub struct FileData {
@@ -39,11 +38,7 @@ impl FileRequestBuilder<String> {
         key: T,
     ) -> Result<StraicoRequestBuilder<ApiKeySet, PayloadSet, FileData>, Error> {
         let file = self.build().file;
-        ReqwestClient::new()
-            .to_straico()
-            .file()
-            .bearer_auth(key)
-            .multipart(file)
-            .await
+        let client = StraicoClient::new();
+        client.file().bearer_auth(key).multipart(file).await
     }
 }

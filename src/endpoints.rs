@@ -11,3 +11,21 @@ pub struct ApiResponseData<T> {
     pub data: T,
     pub success: bool,
 }
+
+#[allow(dead_code)]
+#[derive(Deserialize)]
+pub struct ApiResponseData2 {
+    data: ResponseType,
+    success: bool,
+}
+
+#[derive(Deserialize)]
+#[allow(dead_code)]
+#[serde(untagged)]
+enum ResponseType {
+    Completion(completion::completion_response::CompletionData),
+    File(file::FileData),
+    Image(image::ImageData),
+    Model(model::ModelData),
+    User(user::UserData),
+}

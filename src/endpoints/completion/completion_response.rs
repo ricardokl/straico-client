@@ -31,7 +31,7 @@ pub struct Model {
     words: Words,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Completion {
     pub choices: Vec<Choice>,
     pub object: Box<str>,
@@ -41,32 +41,29 @@ pub struct Completion {
     pub usage: Usage,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Usage {
     pub prompt_tokens: u32,
     pub completion_tokens: u32,
     pub total_tokens: u32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Choice {
     pub message: Message,
     pub index: u8,
     pub finish_reason: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
     pub content: String,
     pub role: String,
 }
 
 impl CompletionData {
-    pub fn get_completion(self, model: &str) -> Completion {
-        self.completions
-            .into_iter()
-            .find(|(m, _)| m == model)
-            .map(|(_, c)| c.completion)
-            .unwrap()
+    pub fn get_completion(self) -> Completion {
+        let values = self.completions.into_values();
+        values.map(|x| x.completion).next().unwrap()
     }
 }

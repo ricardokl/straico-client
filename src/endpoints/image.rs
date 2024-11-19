@@ -1,8 +1,7 @@
-use reqwest::Client as ReqwestClient;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-use crate::client::{ApiKeySet, IntoStraicoClient, PayloadSet, StraicoRequestBuilder};
+use crate::client::{ApiKeySet, PayloadSet, StraicoClient, StraicoRequestBuilder};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
@@ -116,10 +115,7 @@ impl ImageRequestBuilder<ModelSet, DescriptionSet, SizeSet, VariationsSet> {
         key: T,
     ) -> StraicoRequestBuilder<ApiKeySet, PayloadSet, ImageData> {
         let payload = self.build();
-        ReqwestClient::new()
-            .to_straico()
-            .image()
-            .json(&payload)
-            .bearer_auth(key)
+        let client = StraicoClient::new();
+        client.image().json(payload).bearer_auth(key)
     }
 }

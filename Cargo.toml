@@ -16,9 +16,9 @@ path = "src/main.rs"
 [dependencies]
 actix-web = "4.9.0"
 futures = "0.3.31"
-minijinja = "2.4.0"
+# minijinja = "2.4.0"
 reqwest = { version = "0.12.8", features = ["json", "multipart", "stream"] }
-serde = { version = "1.0.211", features = ["derive"] }
+serde = { version = "1.0.211", default-features = false, features = ["derive"] }
 serde_json = "1.0.132"
 url = "2.5.2"
 

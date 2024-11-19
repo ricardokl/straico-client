@@ -1,13 +1,13 @@
-use crate::client::{ApiKeySet, IntoStraicoClient, PayloadSet, StraicoRequestBuilder};
+use crate::client::{ApiKeySet, PayloadSet, StraicoClient, StraicoRequestBuilder};
 use crate::endpoints::completion::completion_response::CompletionData;
-use reqwest::Client as ReqwestClient;
 use serde::Serialize;
+use std::borrow::Cow;
 use std::fmt::Display;
 
 #[derive(Serialize)]
 pub struct CompletionRequest<'a> {
     models: RequestModels<'a>,
-    message: &'a str,
+    message: Prompt<'a>,
     #[serde(skip_serializing_if = "Option::is_none")]
     file_urls: Option<Vec<&'a str>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -15,20 +15,35 @@ pub struct CompletionRequest<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     display_transcripts: Option<bool>,
     temperature: f32,
-    max_tokens: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_tokens: Option<u32>,
+}
+
+#[derive(Serialize, Clone)]
+pub struct Prompt<'a>(Cow<'a, str>);
+
+impl<'a> From<Cow<'a, str>> for Prompt<'a> {
+    fn from(value: Cow<'a, str>) -> Self {
+        Prompt(value)
+    }
 }
 
 #[derive(Serialize)]
 pub struct RequestModels<'a>(
-    #[serde(skip_serializing_if = "Option::is_none")] Option<&'a str>,
-    #[serde(skip_serializing_if = "Option::is_none")] Option<&'a str>,
-    #[serde(skip_serializing_if = "Option::is_none")] Option<&'a str>,
-    #[serde(skip_serializing_if = "Option::is_none")] Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")] Option<Cow<'a, str>>,
+    #[serde(skip_serializing_if = "Option::is_none")] Option<Cow<'a, str>>,
+    #[serde(skip_serializing_if = "Option::is_none")] Option<Cow<'a, str>>,
+    #[serde(skip_serializing_if = "Option::is_none")] Option<Cow<'a, str>>,
 );
 
 impl Default for RequestModels<'_> {
     fn default() -> Self {
-        Self(Some("openai/gpt-3.5-turbo-0125"), None, None, None)
+        Self(
+            Some(Cow::Borrowed("openai/gpt-3.5-turbo-0125")),
+            None,
+            None,
+            None,
+        )
     }
 }
 
@@ -37,7 +52,7 @@ where
     [(); N]: Max4,
 {
     fn from(arr: [&'a str; N]) -> Self {
-        let [a, b, c, d] = std::array::from_fn(|i| arr.get(i).map(|x| *x));
+        let [a, b, c, d] = std::array::from_fn(|i| arr.get(i).map(|x| Cow::Borrowed(*x)));
         Self(a, b, c, d)
     }
 }
@@ -54,16 +69,27 @@ impl<'a> From<&'a str> for RequestModels<'a> {
     }
 }
 
-pub struct ModelsSet<'a>(RequestModels<'a>);
-pub struct MessageSet<'a>(&'a str);
+impl<'a> From<Cow<'a, str>> for RequestModels<'a> {
+    fn from(value: Cow<'a, str>) -> Self {
+        RequestModels(Some(value), None, None, None)
+    }
+}
+
+// pub struct ModelsSet<'a>(RequestModels<'a>);
+// #[derive(Serialize)]
+// #[serde(transparent)]
+// pub struct MessageSet<'a>(&'a str);
 pub struct ModelsNotSet;
 pub struct MessageNotSet;
 
-impl<'a> From<RequestModels<'a>> for ModelsSet<'a> {
-    fn from(value: RequestModels<'a>) -> Self {
-        Self(value)
-    }
-}
+// impl<'a> From<RequestModels<'a>> for ModelsSet<'a> {
+//     fn from(value: RequestModels<'a>) -> Self {
+//         Self(value)
+//     }
+// }
+
+type MessageSet<'a> = Prompt<'a>;
+type ModelsSet<'a> = RequestModels<'a>;
 
 pub struct CompletionRequestBuilder<'a, T, K> {
     models: T,
@@ -72,7 +98,7 @@ pub struct CompletionRequestBuilder<'a, T, K> {
     youtube_urls: Option<Vec<&'a str>>,
     display_transcripts: Option<bool>,
     temperature: f32,
-    max_tokens: u32,
+    max_tokens: Option<u32>,
 }
 
 impl<'a> CompletionRequest<'a> {
@@ -84,7 +110,7 @@ impl<'a> CompletionRequest<'a> {
             youtube_urls: None,
             display_transcripts: None,
             temperature: 0.0,
-            max_tokens: 32000,
+            max_tokens: None,
         }
     }
 }
@@ -95,7 +121,7 @@ impl<'a, T> CompletionRequestBuilder<'a, ModelsNotSet, T> {
         M: Into<RequestModels<'a>>,
     {
         CompletionRequestBuilder {
-            models: ModelsSet(models.into()),
+            models: models.into(),
             file_urls: self.file_urls,
             youtube_urls: self.youtube_urls,
             display_transcripts: self.display_transcripts,
@@ -109,11 +135,11 @@ impl<'a, T> CompletionRequestBuilder<'a, ModelsNotSet, T> {
 impl<'a, T> CompletionRequestBuilder<'a, T, MessageNotSet> {
     pub fn message<M>(self, message: M) -> CompletionRequestBuilder<'a, T, MessageSet<'a>>
     where
-        M: Into<&'a str>,
+        M: Into<Prompt<'a>>,
     {
         CompletionRequestBuilder {
             models: self.models,
-            message: MessageSet(message.into()),
+            message: message.into(),
             file_urls: self.file_urls,
             youtube_urls: self.youtube_urls,
             display_transcripts: self.display_transcripts,
@@ -124,47 +150,40 @@ impl<'a, T> CompletionRequestBuilder<'a, T, MessageNotSet> {
 }
 
 impl<'a, T, K> CompletionRequestBuilder<'a, T, K> {
-    pub fn file_urls(self, file_urls: &[&'a str]) -> CompletionRequestBuilder<'a, T, K> {
-        CompletionRequestBuilder {
-            file_urls: Some(file_urls.into()),
-            ..self
-        }
+    pub fn file_urls(mut self, file_urls: &[&'a str]) -> CompletionRequestBuilder<'a, T, K> {
+        self.file_urls = Some(file_urls.into());
+        self
     }
 
-    pub fn youtube_urls(self, youtube_urls: &[&'a str]) -> CompletionRequestBuilder<'a, T, K> {
-        CompletionRequestBuilder {
-            youtube_urls: Some(youtube_urls.into()),
-            ..self
-        }
+    pub fn youtube_urls(mut self, youtube_urls: &[&'a str]) -> CompletionRequestBuilder<'a, T, K> {
+        self.youtube_urls = Some(youtube_urls.into());
+        self
     }
 
     pub fn display_transcripts(
-        self,
+        mut self,
         display_transcripts: bool,
     ) -> CompletionRequestBuilder<'a, T, K> {
-        CompletionRequestBuilder {
-            display_transcripts: Some(display_transcripts),
-            ..self
-        }
+        self.display_transcripts = Some(display_transcripts);
+        self
     }
 
-    pub fn temperature(self, temperature: f32) -> CompletionRequestBuilder<'a, T, K> {
-        CompletionRequestBuilder {
-            temperature,
-            ..self
-        }
+    pub fn temperature(mut self, temperature: f32) -> CompletionRequestBuilder<'a, T, K> {
+        self.temperature = temperature;
+        self
     }
 
-    pub fn max_tokens(self, max_tokens: u32) -> CompletionRequestBuilder<'a, T, K> {
-        CompletionRequestBuilder { max_tokens, ..self }
+    pub fn max_tokens(mut self, max_tokens: u32) -> CompletionRequestBuilder<'a, T, K> {
+        self.max_tokens = Some(max_tokens);
+        self
     }
 }
 
 impl<'a> CompletionRequestBuilder<'a, ModelsSet<'a>, MessageSet<'a>> {
     pub fn build(self) -> CompletionRequest<'a> {
         CompletionRequest {
-            models: self.models.0,
-            message: self.message.0,
+            models: self.models,
+            message: self.message,
             file_urls: self.file_urls,
             youtube_urls: self.youtube_urls,
             display_transcripts: self.display_transcripts,
@@ -178,10 +197,7 @@ impl<'a> CompletionRequestBuilder<'a, ModelsSet<'a>, MessageSet<'a>> {
         key: T,
     ) -> StraicoRequestBuilder<ApiKeySet, PayloadSet, CompletionData> {
         let payload = self.build();
-        ReqwestClient::new()
-            .to_straico()
-            .completion()
-            .bearer_auth(key)
-            .json(&payload)
+        let client: StraicoClient = StraicoClient::new();
+        client.completion().bearer_auth(key).json(payload)
     }
 }
