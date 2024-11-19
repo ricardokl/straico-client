@@ -15,6 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 actix-web = "4.9.0"
+clap = { version = "4.4", features = ["derive", "env"] }
 futures = "0.3.31"
 # minijinja = "2.4.0"
 reqwest = { version = "0.12.8", features = ["json", "multipart", "stream"] }

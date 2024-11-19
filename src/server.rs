@@ -74,25 +74,30 @@ impl<'a> From<OpenAiRequest<'a>> for CompletionRequest<'a> {
 
 #[post("/v1/chat/completions")]
 pub async fn openai_completion<'a>(
-    // req: web::Json<OpenAiRequest<'a>>,
     req: web::Json<Value>,
     data: web::Data<AppState>,
 ) -> Result<impl Responder, Error> {
-    println!("Received request: {:?}", req);
+    if data.debug {
+        println!("Received request: {:?}", req);
+    }
+    
     let req: OpenAiRequest = serde_json::from_value(req.into_inner())?;
     let client = data.client.clone();
     let response = client
         .completion()
         .bearer_auth(&data.key)
-        // .json(req.into_inner())
         .json(req)
         .send()
         .map_ok(|c| c.data.get_completion())
         .map_err(|e| ErrorInternalServerError(e))
         .await?;
-    println!(
-        "Received response: {:?}",
-        serde_json::to_string_pretty(&response)
-    );
+    
+    if data.debug {
+        println!(
+            "Received response: {:?}",
+            serde_json::to_string_pretty(&response)
+        );
+    }
+    
     Ok(web::Json(response))
 }
