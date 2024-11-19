@@ -1,3 +1,8 @@
+//! OpenAI API compatibility layer for Straico API
+//! 
+//! This module provides compatibility with OpenAI's chat completion API format,
+//! translating requests to Straico's format and back.
+
 use serde_json::Value;
 use std::{borrow::Cow, ops::Deref};
 
@@ -7,6 +12,26 @@ use futures::TryFutureExt;
 use serde::{Deserialize, Serialize};
 use straico::endpoints::completion::completion_request::{CompletionRequest, Prompt};
 
+/// Request format matching OpenAI's chat completion API
+/// 
+/// # Examples
+/// 
+/// ```
+/// # use serde_json::json;
+/// let request_json = json!({
+///     "model": "gpt-4",
+///     "messages": [
+///         {"role": "system", "content": "You are a helpful assistant."},
+///         {"role": "user", "content": "Hello!"}
+///     ],
+///     "max_tokens": 100,
+///     "temperature": 0.7
+/// });
+/// 
+/// let request: OpenAiRequest = serde_json::from_value(request_json).unwrap();
+/// assert_eq!(request.model, "gpt-4");
+/// assert_eq!(request.max_tokens, Some(100));
+/// ```
 #[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(into = "CompletionRequest")]
 struct OpenAiRequest<'a> {
@@ -17,6 +42,26 @@ struct OpenAiRequest<'a> {
     temperature: Option<f32>,
 }
 
+/// Collection of chat messages in a conversation
+/// 
+/// # Examples
+/// 
+/// ```
+/// let chat = Chat(vec![
+///     Message {
+///         role: Role::System,
+///         content: "You are a helpful assistant.".into()
+///     },
+///     Message {
+///         role: Role::User,
+///         content: "Hi!".into()
+///     }
+/// ]);
+/// 
+/// let prompt: Prompt = chat.into();
+/// assert!(prompt.as_ref().contains("<system>"));
+/// assert!(prompt.as_ref().contains("<user>"));
+/// ```
 #[derive(Deserialize, Clone, Debug)]
 struct Chat<'a>(Vec<Message<'a>>);
 
@@ -72,6 +117,17 @@ impl<'a> From<OpenAiRequest<'a>> for CompletionRequest<'a> {
     }
 }
 
+/// Handler for OpenAI-compatible chat completion endpoint
+/// 
+/// Accepts requests in OpenAI's format and returns responses in a compatible format.
+/// When debug mode is enabled, prints both request and response JSON.
+/// 
+/// # Errors
+/// 
+/// Returns an error if:
+/// - Request JSON cannot be parsed
+/// - API call fails
+/// - Response cannot be serialized
 #[post("/v1/chat/completions")]
 pub async fn openai_completion<'a>(
     req: web::Json<Value>,
