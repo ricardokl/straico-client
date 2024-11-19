@@ -13,28 +13,9 @@ use serde::{Deserialize, Serialize};
 use straico::endpoints::completion::completion_request::{CompletionRequest, Prompt};
 
 /// Request format matching OpenAI's chat completion API
-/// 
-/// # Examples
-/// 
-/// ```
-/// # use serde_json::json;
-/// let request_json = json!({
-///     "model": "gpt-4",
-///     "messages": [
-///         {"role": "system", "content": "You are a helpful assistant."},
-///         {"role": "user", "content": "Hello!"}
-///     ],
-///     "max_tokens": 100,
-///     "temperature": 0.7
-/// });
-/// 
-/// let request: OpenAiRequest = serde_json::from_value(request_json).unwrap();
-/// assert_eq!(request.model, "gpt-4");
-/// assert_eq!(request.max_tokens, Some(100));
-/// ```
 #[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(into = "CompletionRequest")]
-struct OpenAiRequest<'a> {
+pub struct OpenAiRequest<'a> {
     model: Cow<'a, str>,
     messages: Chat<'a>,
     #[serde(alias = "max_completion_tokens")]
@@ -43,27 +24,8 @@ struct OpenAiRequest<'a> {
 }
 
 /// Collection of chat messages in a conversation
-/// 
-/// # Examples
-/// 
-/// ```
-/// let chat = Chat(vec![
-///     Message {
-///         role: Role::System,
-///         content: "You are a helpful assistant.".into()
-///     },
-///     Message {
-///         role: Role::User,
-///         content: "Hi!".into()
-///     }
-/// ]);
-/// 
-/// let prompt: Prompt = chat.into();
-/// assert!(prompt.as_ref().contains("<system>"));
-/// assert!(prompt.as_ref().contains("<user>"));
-/// ```
 #[derive(Deserialize, Clone, Debug)]
-struct Chat<'a>(Vec<Message<'a>>);
+pub struct Chat<'a>(pub Vec<Message<'a>>);
 
 impl<'a> Deref for Chat<'a> {
     type Target = Vec<Message<'a>>;
@@ -90,14 +52,14 @@ impl<'a> From<Chat<'a>> for Prompt<'a> {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-struct Message<'a> {
-    role: Role,
-    content: Cow<'a, str>,
+pub struct Message<'a> {
+    pub role: Role,
+    pub content: Cow<'a, str>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "lowercase")]
-enum Role {
+pub enum Role {
     User,
     Assistant,
     System,
