@@ -19,7 +19,7 @@ struct Cli {
     port: u16,
 
     /// API key for Straico (alternatively use STRAICO_API_KEY env var)
-    #[arg(long, env = "STRAICO_API_KEY")]
+    #[arg(long, env = "STRAICO_API_KEY", hide_env_values = true)]
     api_key: Option<String>,
 
     /// Enable debug logging of requests and responses
