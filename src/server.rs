@@ -7,8 +7,8 @@ use serde_json::Value;
 use std::{borrow::Cow, ops::Deref};
 
 use crate::AppState;
-use actix_web::{error::ErrorInternalServerError, post, web, Error, Responder};
-use futures::TryFutureExt;
+use actix_web::{error::ErrorInternalServerError, post, web, Error, Responder, HttpResponse};
+use futures::{TryFutureExt, StreamExt};
 use serde::{Deserialize, Serialize};
 use straico::endpoints::completion::completion_request::{CompletionRequest, Prompt};
 
@@ -21,6 +21,7 @@ pub struct OpenAiRequest<'a> {
     #[serde(alias = "max_completion_tokens")]
     max_tokens: Option<u32>,
     temperature: Option<f32>,
+    stream: Option<bool>,
 }
 
 /// Collection of chat messages in a conversation
@@ -106,19 +107,41 @@ pub async fn openai_completion<'a>(
 
     let req: OpenAiRequest = serde_json::from_value(req.into_inner())?;
     let client = data.client.clone();
-    let response = client
-        .completion()
-        .bearer_auth(&data.key)
-        .json(req)
-        .send()
-        .map_ok(|c| c.data.get_completion())
-        .map_err(|e| ErrorInternalServerError(e))
-        .await?;
+    
+    // Handle streaming vs non-streaming requests
+    if req.stream.unwrap_or(false) {
+        let response = client
+            .completion()
+            .bearer_auth(&data.key)
+            .json(&req)
+            .send_stream()
+            .await
+            .map_err(ErrorInternalServerError)?;
 
-    if data.debug {
-        println!("\nReceived response:");
-        println!("{}", serde_json::to_string_pretty(&response)?);
+        let stream = response.bytes_stream().map(|chunk| {
+            chunk
+                .map_err(ErrorInternalServerError)
+                .map(|bytes| web::Bytes::from(bytes))
+        });
+
+        Ok(HttpResponse::Ok()
+            .append_header(("Content-Type", "text/event-stream"))
+            .streaming(stream))
+    } else {
+        let response = client
+            .completion()
+            .bearer_auth(&data.key)
+            .json(req)
+            .send()
+            .map_ok(|c| c.data.get_completion())
+            .map_err(|e| ErrorInternalServerError(e))
+            .await?;
+
+        if data.debug {
+            println!("\nReceived response:");
+            println!("{}", serde_json::to_string_pretty(&response)?);
+        }
+
+        Ok(web::Json(response))
     }
-
-    Ok(web::Json(response))
 }
