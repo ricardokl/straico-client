@@ -1,5 +1,5 @@
 use futures::TryFutureExt;
-use reqwest::{multipart::Form, Client, RequestBuilder, Response};
+use reqwest::{multipart::Form, Client, RequestBuilder, Response, IntoResponse};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, future::Future, marker::PhantomData, path::Path};
 
@@ -90,6 +90,10 @@ impl<K, T: Serialize, V> StraicoRequestBuilder<K, T, V> {
 impl<V: for<'a> Deserialize<'a>> StraicoRequestBuilder<ApiKeySet, PayloadSet, V> {
     pub fn send(self) -> impl Future<Output = reqwest::Result<ApiResponseData<V>>> {
         self.0.send().and_then(Response::json)
+    }
+
+    pub fn send_stream(self) -> impl Future<Output = reqwest::Result<Response>> {
+        self.0.send()
     }
 }
 
