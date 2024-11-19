@@ -28,6 +28,13 @@ impl<'a> From<Cow<'a, str>> for Prompt<'a> {
     }
 }
 
+impl<'a> AsRef<str> for Prompt<'a> {
+    fn as_ref(&self) -> &str {
+        let Prompt(x) = self;
+        x
+    }
+}
+
 #[derive(Serialize)]
 pub struct RequestModels<'a>(
     #[serde(skip_serializing_if = "Option::is_none")] Option<Cow<'a, str>>,
@@ -199,5 +206,27 @@ impl<'a> CompletionRequestBuilder<'a, ModelsSet<'a>, MessageSet<'a>> {
         let payload = self.build();
         let client: StraicoClient = StraicoClient::new();
         client.completion().bearer_auth(key).json(payload)
+    }
+}
+
+impl<'a> CompletionRequest<'a> {
+    pub fn get_max_tokens(&self) -> Option<u32> {
+        self.max_tokens
+    }
+
+    pub fn get_temperature(&self) -> f32 {
+        self.temperature
+    }
+
+    pub fn get_display_transcripts(&self) -> Option<bool> {
+        self.display_transcripts
+    }
+
+    pub fn get_file_urls(&self) -> Option<&Vec<&'a str>> {
+        self.file_urls.as_ref()
+    }
+
+    pub fn get_youtube_urls(&self) -> Option<&Vec<&'a str>> {
+        self.youtube_urls.as_ref()
     }
 }

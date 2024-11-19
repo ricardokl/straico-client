@@ -1,10 +1,6 @@
-pub mod chat;
 pub mod client;
 pub mod common;
 pub mod endpoints;
-pub mod server;
-
-pub use server::{OpenAiRequest, Chat, Message, Role};
 
 pub enum GetEndpoint {
     User,

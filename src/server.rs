@@ -1,5 +1,5 @@
 //! OpenAI API compatibility layer for Straico API
-//! 
+//!
 //! This module provides compatibility with OpenAI's chat completion API format,
 //! translating requests to Straico's format and back.
 
@@ -51,12 +51,16 @@ impl<'a> From<Chat<'a>> for Prompt<'a> {
     }
 }
 
+/// A single chat message in a conversation,
+/// consisting of the role of the sender and,
+/// the content of the message
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Message<'a> {
     pub role: Role,
     pub content: Cow<'a, str>,
 }
 
+/// The Role of the sender in a chat message
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum Role {
@@ -80,12 +84,12 @@ impl<'a> From<OpenAiRequest<'a>> for CompletionRequest<'a> {
 }
 
 /// Handler for OpenAI-compatible chat completion endpoint
-/// 
+///
 /// Accepts requests in OpenAI's format and returns responses in a compatible format.
 /// When debug mode is enabled, prints both request and response JSON.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Returns an error if:
 /// - Request JSON cannot be parsed
 /// - API call fails
@@ -99,7 +103,7 @@ pub async fn openai_completion<'a>(
         println!("\nReceived request:");
         println!("{}", serde_json::to_string_pretty(&req)?);
     }
-    
+
     let req: OpenAiRequest = serde_json::from_value(req.into_inner())?;
     let client = data.client.clone();
     let response = client
@@ -110,11 +114,11 @@ pub async fn openai_completion<'a>(
         .map_ok(|c| c.data.get_completion())
         .map_err(|e| ErrorInternalServerError(e))
         .await?;
-    
+
     if data.debug {
         println!("\nReceived response:");
         println!("{}", serde_json::to_string_pretty(&response)?);
     }
-    
+
     Ok(web::Json(response))
 }
