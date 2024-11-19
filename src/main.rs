@@ -37,9 +37,7 @@ struct AppState {
 async fn main() -> std::io::Result<()> {
     let cli = Cli::parse();
     
-    let api_key = cli.api_key.unwrap_or_else(|| {
-        std::env::var("STRAICO_API_KEY").expect("STRAICO_API_KEY is not set")
-    });
+    let api_key = cli.api_key.unwrap();
 
     let addr = format!("{}:{}", cli.host, cli.port);
     println!("Starting Straico proxy server...");
