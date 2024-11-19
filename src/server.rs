@@ -78,7 +78,8 @@ pub async fn openai_completion<'a>(
     data: web::Data<AppState>,
 ) -> Result<impl Responder, Error> {
     if data.debug {
-        println!("Received request: {:?}", req);
+        println!("\nReceived request:");
+        println!("{}", serde_json::to_string_pretty(&req)?);
     }
     
     let req: OpenAiRequest = serde_json::from_value(req.into_inner())?;
@@ -93,10 +94,8 @@ pub async fn openai_completion<'a>(
         .await?;
     
     if data.debug {
-        println!(
-            "Received response: {:?}",
-            serde_json::to_string_pretty(&response)
-        );
+        println!("\nReceived response:");
+        println!("{}", serde_json::to_string_pretty(&response)?);
     }
     
     Ok(web::Json(response))
