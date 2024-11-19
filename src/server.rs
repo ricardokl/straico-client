@@ -1,3 +1,4 @@
+use serde_json::Value;
 use std::{borrow::Cow, ops::Deref};
 
 use crate::AppState;
@@ -32,6 +33,7 @@ impl<'a> From<Chat<'a>> for Prompt<'a> {
         let xml_string = value
             .iter()
             .map(|message| match message.role {
+                Role::System => format!("<system>{}</system>", message.content),
                 Role::User => format!("<user>{}</user>", message.content),
                 Role::Assistant => format!("<assistant>{}</assistant>", message.content),
             })
@@ -53,6 +55,7 @@ struct Message<'a> {
 enum Role {
     User,
     Assistant,
+    System,
 }
 
 impl<'a> From<OpenAiRequest<'a>> for CompletionRequest<'a> {
@@ -69,19 +72,27 @@ impl<'a> From<OpenAiRequest<'a>> for CompletionRequest<'a> {
     }
 }
 
-#[post("/openai/v1/chat/completions")]
+#[post("/v1/chat/completions")]
 pub async fn openai_completion<'a>(
-    req: web::Json<OpenAiRequest<'a>>,
+    // req: web::Json<OpenAiRequest<'a>>,
+    req: web::Json<Value>,
     data: web::Data<AppState>,
 ) -> Result<impl Responder, Error> {
+    println!("Received request: {:?}", req);
+    let req: OpenAiRequest = serde_json::from_value(req.into_inner())?;
     let client = data.client.clone();
     let response = client
         .completion()
         .bearer_auth(&data.key)
-        .json(req.into_inner())
+        // .json(req.into_inner())
+        .json(req)
         .send()
         .map_ok(|c| c.data.get_completion())
         .map_err(|e| ErrorInternalServerError(e))
         .await?;
+    println!(
+        "Received response: {:?}",
+        serde_json::to_string_pretty(&response)
+    );
     Ok(web::Json(response))
 }
