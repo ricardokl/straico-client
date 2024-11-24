@@ -3,78 +3,32 @@
 //! This module provides compatibility with OpenAI's chat completion API format,
 //! translating requests to Straico's format and back.
 
-use serde_json::Value;
-use std::{borrow::Cow, ops::Deref};
-
 use crate::AppState;
-use actix_web::{error::ErrorInternalServerError, post, web, Error, Responder, HttpResponse};
-use futures::{TryFutureExt, StreamExt};
+use actix_web::{error::ErrorInternalServerError, post, web, Error, Responder};
+use futures::TryFutureExt;
 use serde::{Deserialize, Serialize};
-use straico::endpoints::completion::completion_request::{CompletionRequest, Prompt};
+use std::borrow::Cow;
+use straico::chat::{Chat, Tool};
+use straico::endpoints::completion::completion_request::CompletionRequest;
 
 /// Request format matching OpenAI's chat completion API
 #[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(into = "CompletionRequest")]
 pub struct OpenAiRequest<'a> {
     model: Cow<'a, str>,
-    messages: Chat<'a>,
+    messages: Chat,
     #[serde(alias = "max_completion_tokens")]
     max_tokens: Option<u32>,
     temperature: Option<f32>,
-    stream: Option<bool>,
-}
-
-/// Collection of chat messages in a conversation
-#[derive(Deserialize, Clone, Debug)]
-pub struct Chat<'a>(pub Vec<Message<'a>>);
-
-impl<'a> Deref for Chat<'a> {
-    type Target = Vec<Message<'a>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl<'a> From<Chat<'a>> for Prompt<'a> {
-    fn from(value: Chat<'a>) -> Self {
-        let xml_string = value
-            .iter()
-            .map(|message| match message.role {
-                Role::System => format!("<system>{}</system>", message.content),
-                Role::User => format!("<user>{}</user>", message.content),
-                Role::Assistant => format!("<assistant>{}</assistant>", message.content),
-            })
-            .collect::<Vec<String>>()
-            .join("\n");
-
-        Prompt::from(Cow::Owned(xml_string))
-    }
-}
-
-/// A single chat message in a conversation,
-/// consisting of the role of the sender and,
-/// the content of the message
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Message<'a> {
-    pub role: Role,
-    pub content: Cow<'a, str>,
-}
-
-/// The Role of the sender in a chat message
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
-pub enum Role {
-    User,
-    Assistant,
-    System,
+    _stream: Option<bool>,
+    tools: Option<Vec<Tool>>,
 }
 
 impl<'a> From<OpenAiRequest<'a>> for CompletionRequest<'a> {
     fn from(value: OpenAiRequest<'a>) -> Self {
         let builder = CompletionRequest::new()
             .models(value.model)
-            .message(value.messages);
+            .message(value.messages.to_prompt(value.tools));
         match (value.max_tokens, value.temperature) {
             (Some(x), Some(y)) => builder.max_tokens(x).temperature(y).build(),
             (Some(x), None) => builder.max_tokens(x).build(),
@@ -97,51 +51,28 @@ impl<'a> From<OpenAiRequest<'a>> for CompletionRequest<'a> {
 /// - Response cannot be serialized
 #[post("/v1/chat/completions")]
 pub async fn openai_completion<'a>(
-    req: web::Json<Value>,
+    req: web::Json<OpenAiRequest<'a>>,
     data: web::Data<AppState>,
 ) -> Result<impl Responder, Error> {
     if data.debug {
         println!("\nReceived request:");
         println!("{}", serde_json::to_string_pretty(&req)?);
     }
-
-    let req: OpenAiRequest = serde_json::from_value(req.into_inner())?;
     let client = data.client.clone();
-    
-    // Handle streaming vs non-streaming requests
-    if req.stream.unwrap_or(false) {
-        let response = client
-            .completion()
-            .bearer_auth(&data.key)
-            .json(&req)
-            .send_stream()
-            .await
-            .map_err(ErrorInternalServerError)?;
 
-        let stream = response.bytes_stream().map(|chunk| {
-            chunk
-                .map_err(ErrorInternalServerError)
-                .map(|bytes| web::Bytes::from(bytes))
-        });
+    let response = client
+        .completion()
+        .bearer_auth(&data.key)
+        .json(req.into_inner())
+        .send()
+        .map_ok(|c| c.data.get_completion())
+        .map_err(|e| ErrorInternalServerError(e))
+        .await?;
 
-        Ok(HttpResponse::Ok()
-            .append_header(("Content-Type", "text/event-stream"))
-            .streaming(stream))
-    } else {
-        let response = client
-            .completion()
-            .bearer_auth(&data.key)
-            .json(req)
-            .send()
-            .map_ok(|c| c.data.get_completion())
-            .map_err(|e| ErrorInternalServerError(e))
-            .await?;
-
-        if data.debug {
-            println!("\nReceived response:");
-            println!("{}", serde_json::to_string_pretty(&response)?);
-        }
-
-        Ok(web::Json(response))
+    if data.debug {
+        println!("\nReceived response:");
+        println!("{}", serde_json::to_string_pretty(&response)?);
     }
+
+    Ok(web::Json(response))
 }

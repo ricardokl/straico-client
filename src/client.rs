@@ -1,5 +1,5 @@
 use futures::TryFutureExt;
-use reqwest::{multipart::Form, Client, RequestBuilder, Response, IntoResponse};
+use reqwest::{multipart::Form, Client, RequestBuilder, Response};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, future::Future, marker::PhantomData, path::Path};
 
