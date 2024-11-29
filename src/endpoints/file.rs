@@ -1,5 +1,6 @@
+use anyhow::Result;
 use serde::Deserialize;
-use std::{fmt::Display, io::Error, path::Path};
+use std::{fmt::Display, path::Path};
 
 use crate::client::{ApiKeySet, PayloadSet, StraicoClient, StraicoRequestBuilder};
 
@@ -36,7 +37,7 @@ impl FileRequestBuilder<String> {
     pub async fn bearer_auth<T: Display>(
         self,
         key: T,
-    ) -> Result<StraicoRequestBuilder<ApiKeySet, PayloadSet, FileData>, Error> {
+    ) -> Result<StraicoRequestBuilder<ApiKeySet, PayloadSet, FileData>> {
         let file = self.build().file;
         let client = StraicoClient::new();
         client.file().bearer_auth(key).multipart(file).await
