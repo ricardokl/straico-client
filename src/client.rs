@@ -181,7 +181,7 @@ impl<V: for<'a> Deserialize<'a>> StraicoRequestBuilder<ApiKeySet, PayloadSet, V>
     /// A Future that resolves to a Result containing either:
     /// - The deserialized API response data of type `ApiResponseData<V>`
     /// - A reqwest error if the request fails or JSON parsing fails
-    pub fn send(self) -> impl Future<Output = reqwest::Result<ApiResponseData<V>>> {
+    pub fn send(self) -> impl Future<Output = reqwest::Result<ApiResponseData>> {
         self.0.send().and_then(Response::json)
     }
 }

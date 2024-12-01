@@ -16,28 +16,69 @@ use serde::{Deserialize, Serialize};
 ///
 /// * `data` - The actual data payload of type T returned by the API
 /// * `success` - A boolean indicating if the API call was successful
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ApiResponseData<T> {
-    pub data: T,
-    pub success: bool,
-}
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct ApiResponseData<T> {
+//     pub data: T,
+//     pub success: bool,
+// }
 
-// Attempt to avoid having to use a generic type parameter for the response data
-// Still needs testing
-#[allow(dead_code)]
-#[derive(Deserialize)]
-pub struct ApiResponseData2 {
-    data: ResponseType,
+/// A container for API response data
+///
+/// # Fields
+///
+/// * `data` - The response payload, containing one of several possible response types
+/// * `success` - A boolean indicating whether the API call was successful
+#[derive(Deserialize, Serialize)]
+pub struct ApiResponseData {
+    /// The response payload, containing one of several possible response types
+    pub data: ResponseType,
+    /// A boolean indicating whether the API call was successful
     success: bool,
 }
 
-#[derive(Deserialize)]
-#[allow(dead_code)]
+/// An enum representing different types of API responses
+///
+/// # Variants
+///
+/// * `Completion` - Contains completion response data
+/// * `File` - Contains file data (skipped during serialization)
+/// * `Image` - Contains image data (skipped during serialization)
+/// * `Model` - Contains model data (skipped during serialization)
+/// * `User` - Contains user data (skipped during serialization)
+#[derive(Deserialize, Serialize)]
 #[serde(untagged)]
-enum ResponseType {
+pub enum ResponseType {
+    /// Contains completion data returned from completion API calls
     Completion(completion::completion_response::CompletionData),
+    /// Contains file data, skipped during serialization
+    #[serde(skip_serializing)]
     File(file::FileData),
+    /// Contains image data, skipped during serialization
+    #[serde(skip_serializing)]
     Image(image::ImageData),
+    /// Contains model data, skipped during serialization
+    #[serde(skip_serializing)]
     Model(model::ModelData),
+    /// Contains user data, skipped during serialization
+    #[serde(skip_serializing)]
     User(user::UserData),
+}
+
+impl ResponseType {
+    /// Returns the completion data from a ResponseType::Completion variant
+    ///
+    /// # Returns
+    ///
+    /// A `completion::completion_response::Completion` containing the completion data
+    ///
+    /// # Panics
+    ///
+    /// Will panic if called on any ResponseType variant other than Completion
+    pub fn get_completion(self) -> completion::completion_response::Completion {
+        match self {
+            ResponseType::Completion(data) => data.get_completion(),
+            // Method is only used after recieving a completion response from Straico
+            _ => unreachable!(),
+        }
+    }
 }
