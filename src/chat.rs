@@ -326,7 +326,7 @@ For each tool call, return a json object with function name and arguments within
 
                 (_, Message::Tool { content, .. }) if i > 0 => {
                     // Check if previous message was not a tool
-                    if i == 0 || !matches!(self.0.get(i - 1), Some(Message::Tool { .. })) {
+                    if !matches!(self.0.get(i - 1), Some(Message::Tool { .. })) {
                         output.push_str(format.user_pre);
                     }
 
