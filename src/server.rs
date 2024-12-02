@@ -80,8 +80,8 @@ pub async fn openai_completion<'a>(
 ) -> Result<impl Responder, Error> {
     let req_inner = req.into_inner();
     if data.debug {
-        println!("{:?}", &req_inner);
-        println!("{}", serde_json::to_string_pretty(&req_inner)?);
+        eprintln!("\n\n===== Request recieved: =====");
+        eprintln!("\n{}", serde_json::to_string_pretty(&req_inner)?);
     }
     let client = data.client.clone();
 
@@ -96,8 +96,8 @@ pub async fn openai_completion<'a>(
         .map_err(|e| ErrorInternalServerError(e))?;
 
     if data.debug {
-        println!("\nReceived response:");
-        println!("{}", serde_json::to_string_pretty(&response)?);
+        eprintln!("\n\n===== Received response: =====");
+        eprintln!("\n{}", serde_json::to_string_pretty(&response)?);
     }
 
     Ok(web::Json(
