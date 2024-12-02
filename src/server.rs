@@ -1,6 +1,5 @@
 use crate::AppState;
 use actix_web::{error::ErrorInternalServerError, post, web, Error, Responder};
-use futures::TryFutureExt;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use straico::chat::{Chat, Tool};
@@ -91,9 +90,10 @@ pub async fn openai_completion<'a>(
         .bearer_auth(&data.key)
         .json(req_inner)
         .send()
-        .map_ok(|c| c.data.get_completion())
-        .map_err(|e| ErrorInternalServerError(e))
-        .await?;
+        .await
+        .map_err(|e| ErrorInternalServerError(e))?
+        .get_completion()
+        .map_err(|e| ErrorInternalServerError(e))?;
 
     if data.debug {
         println!("\nReceived response:");

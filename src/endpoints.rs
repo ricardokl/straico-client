@@ -4,34 +4,24 @@ pub mod image;
 pub mod model;
 pub mod user;
 
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
-
-/// A generic API response container structure
-///
-/// # Type Parameters
-///
-/// * `T` - The type of the data payload contained in the response
-///
-/// # Fields
-///
-/// * `data` - The actual data payload of type T returned by the API
-/// * `success` - A boolean indicating if the API call was successful
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct ApiResponseData<T> {
-//     pub data: T,
-//     pub success: bool,
-// }
 
 /// A container for API response data
 ///
 /// # Fields
 ///
-/// * `data` - The response payload, containing one of several possible response types
+/// * `data` - The response payload, containing one of several possible response types (if successful)
+/// * `error` - An error message string (if unsuccessful)
 /// * `success` - A boolean indicating whether the API call was successful
 #[derive(Deserialize, Serialize)]
 pub struct ApiResponseData {
     /// The response payload, containing one of several possible response types
-    pub data: ResponseType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data: Option<ResponseType>,
+    /// An error message if the request was unsuccessful
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
     /// A boolean indicating whether the API call was successful
     success: bool,
 }
@@ -64,20 +54,28 @@ pub enum ResponseType {
     User(user::UserData),
 }
 
-impl ResponseType {
-    /// Returns the completion data from a ResponseType::Completion variant
+impl ApiResponseData {
+    /// Extracts the completion data from the API response
     ///
     /// # Returns
     ///
-    /// A `completion::completion_response::Completion` containing the completion data
+    /// * `Ok(Completion)` - The completion data if the API call was successful
+    /// * `Err` - The error message if the API call failed
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Will panic if called on any ResponseType variant other than Completion
-    pub fn get_completion(self) -> completion::completion_response::Completion {
+    /// Returns an error if:
+    /// * The API call failed and returned an error message
+    /// * The response data was not of type Completion
+    pub fn get_completion(self) -> Result<completion::completion_response::Completion> {
         match self {
-            ResponseType::Completion(data) => data.get_completion(),
-            // Method is only used after recieving a completion response from Straico
+            ApiResponseData {
+                data: Some(ResponseType::Completion(data)),
+                ..
+            } => Ok(data.get_completion()),
+            ApiResponseData {
+                error: Some(err), ..
+            } => Err(anyhow::Error::msg(err)),
             _ => unreachable!(),
         }
     }
