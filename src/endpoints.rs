@@ -1,7 +1,11 @@
 pub mod completion;
+#[cfg(feature = "file")]
 pub mod file;
+#[cfg(feature = "image")]
 pub mod image;
+#[cfg(feature = "model")]
 pub mod model;
+#[cfg(feature = "user")]
 pub mod user;
 
 use anyhow::Result;
@@ -41,15 +45,19 @@ pub enum ResponseType {
     /// Contains completion data returned from completion API calls
     Completion(completion::completion_response::CompletionData),
     /// Contains file data, skipped during serialization
+    #[cfg(feature = "file")]
     #[serde(skip_serializing)]
     File(file::FileData),
     /// Contains image data, skipped during serialization
+    #[cfg(feature = "image")]
     #[serde(skip_serializing)]
     Image(image::ImageData),
     /// Contains model data, skipped during serialization
+    #[cfg(feature = "model")]
     #[serde(skip_serializing)]
     Model(model::ModelData),
     /// Contains user data, skipped during serialization
+    #[cfg(feature = "user")]
     #[serde(skip_serializing)]
     User(user::UserData),
 }

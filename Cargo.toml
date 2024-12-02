@@ -5,8 +5,12 @@ edition = "2021"
 description = "Rust client for the Straico API"
 license = "MIT"
 
-# [features]
-# proxy = ["dep:actix-web", "dep:clap"]
+[features]
+user = []
+model = []
+image = []
+file = []
+default = ["user", "model", "image", "file"]
 
 [lib]
 name = "straico"
@@ -15,20 +19,14 @@ path = "src/lib.rs"
 [[bin]]
 name = "straico-proxy"
 path = "src/main.rs"
-# required-features = ["proxy"]
 
 [dependencies]
 futures = "0.3.31"
-# minijinja = "2.4.0"
 reqwest = { version = "0.12.8", features = ["json", "multipart", "stream"] }
 serde = { version = "1.0.211", default-features = false, features = ["derive"] }
 serde_json = "1.0.132"
-
-# Optional dependencies for the proxy binary
-actix-web = { version = "4.9.0" }                        #, optional = true }
-clap = { version = "4.4", features = ["derive", "env"] } #, optional = true }
+actix-web = { version = "4.9.0" }
+clap = { version = "4.4", features = ["derive", "env"] }
 regex = "1.11.1"
 anyhow = "1.0.93"
-
-[dev-dependencies]
 tokio = { version = "1.0", features = ["full"] }

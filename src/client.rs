@@ -1,20 +1,35 @@
 use anyhow::Result;
 use futures::TryFutureExt;
 use reqwest::header::HeaderMap;
-use reqwest::{multipart::Form, Client, RequestBuilder, Response};
+use reqwest::{Client, RequestBuilder, Response};
 use serde::{Deserialize, Serialize};
-use std::{fmt::Display, future::Future, marker::PhantomData, path::Path};
+use std::{fmt::Display, future::Future, marker::PhantomData};
+
+#[cfg(feature = "file")]
+use crate::endpoints::file::{FileData, FileRequest};
+#[cfg(feature = "file")]
+use reqwest::multipart::Form;
+#[cfg(feature = "file")]
+use std::path::Path;
+
+#[cfg(feature = "image")]
+use crate::endpoints::image::{ImageData, ImageRequest};
+
+#[cfg(feature = "model")]
+use crate::endpoints::model::ModelData;
+
+#[cfg(feature = "user")]
+use crate::endpoints::user::UserData;
 
 use crate::endpoints::{
     completion::completion_request::CompletionRequest,
-    completion::completion_response::CompletionData,
-    file::{FileData, FileRequest},
-    image::{ImageData, ImageRequest},
-    model::ModelData,
-    user::UserData,
-    ApiResponseData,
+    completion::completion_response::CompletionData, ApiResponseData,
 };
-use crate::{GetEndpoint, PostEndpoint};
+
+#[cfg(any(feature = "model", feature = "user"))]
+use crate::GetEndpoint;
+
+use crate::PostEndpoint;
 
 /// Represents the state where no API key has been set for the request
 pub struct NoApiKey;
@@ -89,6 +104,7 @@ impl<'a> StraicoClient {
     /// # Returns
     ///
     /// A `StraicoRequestBuilder` configured for making image generation requests
+    #[cfg(feature = "image")]
     pub fn image(self) -> StraicoRequestBuilder<NoApiKey, ImageRequest, ImageData> {
         self.0.post(PostEndpoint::Image.as_ref()).into()
     }
@@ -98,6 +114,7 @@ impl<'a> StraicoClient {
     /// # Returns
     ///
     /// A `StraicoRequestBuilder` configured for making file upload requests
+    #[cfg(feature = "file")]
     pub fn file(self) -> StraicoRequestBuilder<NoApiKey, FileRequest, FileData> {
         self.0.post(PostEndpoint::File.as_ref()).into()
     }
@@ -107,6 +124,7 @@ impl<'a> StraicoClient {
     /// # Returns
     ///
     /// A `StraicoRequestBuilder` configured for retrieving model information
+    #[cfg(feature = "model")]
     pub fn models(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet, ModelData> {
         self.0.get(GetEndpoint::Models.as_ref()).into()
     }
@@ -116,6 +134,7 @@ impl<'a> StraicoClient {
     /// # Returns
     ///
     /// A `StraicoRequestBuilder` configured for retrieving user data
+    #[cfg(feature = "user")]
     pub fn user(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet, UserData> {
         self.0.get(GetEndpoint::User.as_ref()).into()
     }
@@ -136,7 +155,9 @@ impl<T, U> StraicoRequestBuilder<NoApiKey, T, U> {
     }
 }
 
+#[cfg(feature = "file")]
 type FormResult<T> = Result<StraicoRequestBuilder<T, PayloadSet, FileData>>;
+#[cfg(feature = "file")]
 impl<T> StraicoRequestBuilder<T, FileRequest, FileData> {
     /// Creates a multipart form request for file upload
     ///
