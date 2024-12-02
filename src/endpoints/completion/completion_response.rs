@@ -11,7 +11,7 @@ use std::collections::HashMap;
 /// * `completions` - A mapping of completion identifiers to their associated model data
 /// * `overall_price` - The total price breakdown for all completions
 /// * `overall_words` - The total word count statistics for all completions
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CompletionData {
     /// A map of completion identifiers to their associated model data containing
     /// completion responses, pricing and word count information
@@ -31,7 +31,7 @@ pub struct CompletionData {
 /// * `input` - The cost for input/prompt tokens
 /// * `output` - The cost for output/completion tokens
 /// * `total` - The total combined cost of input and output
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Price {
     /// Cost for input/prompt tokens
     input: f32,
@@ -50,7 +50,7 @@ pub struct Price {
 /// * `input` - The number of words in the input/prompt text
 /// * `output` - The number of words in the output/completion text
 /// * `total` - The total combined word count of input and output
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Words {
     /// Number of words in the input/prompt text
     input: u32,
@@ -69,7 +69,7 @@ pub struct Words {
 /// * `completion` - The completion response containing choices, usage stats and metadata
 /// * `price` - The price breakdown for this model completion
 /// * `words` - Word count statistics for the input/output text
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Model {
     /// The completion response containing choices, usage stats and metadata
     completion: Completion,

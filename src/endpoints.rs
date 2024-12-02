@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 /// * `data` - The response payload, containing one of several possible response types (if successful)
 /// * `error` - An error message string (if unsuccessful)
 /// * `success` - A boolean indicating whether the API call was successful
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct ApiResponseData {
     /// The response payload, containing one of several possible response types
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -35,7 +35,7 @@ pub struct ApiResponseData {
 /// * `Image` - Contains image data (skipped during serialization)
 /// * `Model` - Contains model data (skipped during serialization)
 /// * `User` - Contains user data (skipped during serialization)
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 #[serde(untagged)]
 pub enum ResponseType {
     /// Contains completion data returned from completion API calls

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// * `zip` - The URL or path to a ZIP file containing the generated images
 /// * `images` - A vector of URLs or paths to individual generated images
 /// * `price` - Pricing information including cost per image and totals
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ImageData {
     zip: String,
     images: Vec<String>,
@@ -21,7 +21,7 @@ pub struct ImageData {
 /// * `price_per_image` - The cost per individual generated image in credits/points
 /// * `quantity_images` - The number of images generated in this request
 /// * `total` - The total cost for all images in this request
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Price {
     price_per_image: u16,
     quantity_images: u8,
