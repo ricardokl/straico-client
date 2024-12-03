@@ -4,7 +4,7 @@ This repository contains a Rust client for interacting with the Straico API. The
 
 ## Features
 
-- **Chat Completions**: Send OpenAI-compatible chat completion requests and receive responses.
+- **Prompt Completions**: Send prompts to multiple models and receive responses.
 - **Image Generation**: Generate images using the Straico API.
 - **File Uploads**: Upload files to the Straico API.
 - **Model Information**: Fetch available models from the Straico API.
@@ -30,7 +30,7 @@ The repository includes a proxy server that allows you to send OpenAI-compatible
    - Use any HTTP client to send requests to the proxy server.
    - Example request to the chat completion endpoint:
      ```sh
-     curl -X POST http://localhost:8080/v1/chat/completions \
+     curl -X POST http://localhost:8000/v1/chat/completions \
      -H "Content-Type: application/json" \
      -d '{
        "model": "gpt-3.5-turbo",
@@ -45,10 +45,10 @@ The repository includes a proxy server that allows you to send OpenAI-compatible
 ### Endpoints
 
 - **Chat Completions**: `/v1/chat/completions`
-- **Image Generation**: `/v1/images/generate`
+- **Image Generation**: `/v0/images/generate`
 - **File Uploads**: `/v1/files/upload`
 - **Model Information**: `/v1/models`
-- **User Data**: `/v1/user`
+- **User Data**: `/v0/user`
 
 ### Response Format
 
