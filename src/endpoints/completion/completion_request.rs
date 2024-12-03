@@ -61,6 +61,22 @@ impl<'a> From<Cow<'a, str>> for Prompt<'a> {
     }
 }
 
+impl<'a> From<&'a str> for Prompt<'a> {
+    /// Converts a string reference into a `Prompt<'a>`.
+    ///
+    /// This implementation allows creating a `Prompt` directly from a string reference,
+    /// by converting it to a borrowed `Cow` internally.
+    ///
+    /// # Arguments
+    /// * `value` - A string reference to convert into a prompt
+    ///
+    /// # Returns
+    /// A new `Prompt` containing the provided string reference
+    fn from(value: &'a str) -> Self {
+        Prompt(Cow::Borrowed(value))
+    }
+}
+
 impl<'a> AsRef<str> for Prompt<'a> {
     /// Implements the `AsRef<str>` trait for `Prompt`, allowing borrowing of the underlying string.
     ///

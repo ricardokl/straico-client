@@ -2,7 +2,7 @@ use anyhow::Result;
 #[cfg(feature = "image")]
 use straico::client::StraicoClient;
 #[cfg(feature = "image")]
-use straico::endpoints::image::{ImageRequest, ImageRequestBuilder};
+use straico::endpoints::image::ImageRequest;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
     // Create an image request using the builder pattern
     #[cfg(feature = "image")]
     let image_request = ImageRequest::new()
-        .model("image-model-1")
+        .model("openai/dall-e-3")
         .description("A futuristic cityscape with flying cars")
         .size("1024x1024")
         .variations(3)

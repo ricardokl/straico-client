@@ -1,8 +1,6 @@
 use anyhow::Result;
 #[cfg(feature = "file")]
 use straico::client::StraicoClient;
-#[cfg(feature = "file")]
-use straico::endpoints::file::FileRequestBuilder;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -15,12 +13,18 @@ async fn main() -> Result<()> {
     let api_key = std::env::var("STRAICO_API_KEY").expect("STRAICO_API_KEY must be set");
 
     // Create a file request using the builder pattern
-    #[cfg(feature = "file")]
-    let file_request = FileRequestBuilder::new().file("path/to/your/file.txt");
+    // #[cfg(feature = "file")]
+    // let file_request = FileRequest::new().file("path/to/your/file.txt");
 
     // Send the file request to the API
     #[cfg(feature = "file")]
-    let file_response = file_request.bearer_auth(&api_key).await?;
+    let file_response = client
+        .file()
+        .bearer_auth(api_key)
+        .multipart("path/to/file.txt")
+        .await?
+        .send()
+        .await?;
 
     // Print the response
     #[cfg(feature = "file")]

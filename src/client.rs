@@ -1,6 +1,5 @@
 use anyhow::Result;
 use futures::TryFutureExt;
-use reqwest::header::HeaderMap;
 use reqwest::{Client, RequestBuilder, Response};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, future::Future, marker::PhantomData};
@@ -82,10 +81,6 @@ impl<'a> StraicoClient {
     /// A new StraicoClient instance ready to make API requests
     pub fn new() -> StraicoClient {
         StraicoClient::default()
-    }
-
-    pub fn with_default_headers(headers: HeaderMap) -> Result<StraicoClient> {
-        Ok(Client::builder().default_headers(headers).build()?.into())
     }
 
     /// Creates a request builder for the completion endpoint

@@ -1,14 +1,12 @@
-use anyhow::Result;
 use serde::Deserialize;
-use std::{fmt::Display, path::Path};
-
-use crate::client::{ApiKeySet, PayloadSet, StraicoClient, StraicoRequestBuilder};
+use std::path::Path;
 
 #[derive(Debug, Deserialize)]
 pub struct FileData {
     pub url: String,
 }
 
+#[allow(dead_code)]
 pub struct FileRequest {
     file: String,
 }
@@ -32,14 +30,5 @@ impl FileRequestBuilder<FileNotSet> {
 impl FileRequestBuilder<String> {
     pub fn build(self) -> FileRequest {
         FileRequest { file: self.file }
-    }
-
-    pub async fn bearer_auth<T: Display>(
-        self,
-        key: T,
-    ) -> Result<StraicoRequestBuilder<ApiKeySet, PayloadSet, FileData>> {
-        let file = self.build().file;
-        let client = StraicoClient::new();
-        client.file().bearer_auth(key).multipart(file).await
     }
 }
