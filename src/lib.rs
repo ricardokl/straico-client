@@ -7,7 +7,7 @@ pub mod endpoints;
 /// # Variants
 /// * `User` - Endpoint for user information
 /// * `Models` - Endpoint for available models
-pub enum GetEndpoint {
+enum GetEndpoint {
     User,
     Models,
 }
@@ -18,7 +18,7 @@ pub enum GetEndpoint {
 /// * `Image` - Endpoint for image generation
 /// * `Completion` - Endpoint for prompt completion
 /// * `File` - Endpoint for file uploads
-pub enum PostEndpoint {
+enum PostEndpoint {
     Image,
     Completion,
     File,

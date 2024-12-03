@@ -19,7 +19,7 @@ use straico::endpoints::completion::completion_request::CompletionRequest;
 /// * `tools` - Optional list of tools available to the model
 #[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(into = "CompletionRequest")]
-pub struct OpenAiRequest<'a> {
+struct OpenAiRequest<'a> {
     /// The model identifier to use for completion (e.g. "gpt-3.5-turbo")
     model: Cow<'a, str>,
     /// The conversation history and prompt messages
@@ -74,7 +74,7 @@ impl<'a> From<OpenAiRequest<'a>> for CompletionRequest<'a> {
 /// # Returns
 /// * `Result<impl Responder, Error>` - The completion response or error
 #[post("/v1/chat/completions")]
-pub async fn openai_completion<'a>(
+async fn openai_completion<'a>(
     req: web::Json<OpenAiRequest<'a>>,
     data: web::Data<AppState>,
 ) -> Result<impl Responder, Error> {

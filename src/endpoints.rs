@@ -22,10 +22,10 @@ use serde::{Deserialize, Serialize};
 pub struct ApiResponseData {
     /// The response payload, containing one of several possible response types
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<ResponseType>,
+    data: Option<ResponseType>,
     /// An error message if the request was unsuccessful
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<String>,
+    error: Option<String>,
     /// A boolean indicating whether the API call was successful
     success: bool,
 }

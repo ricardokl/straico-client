@@ -121,7 +121,7 @@ pub enum AssistantMessage {
 /// * `assistant_pre` - Text to insert before assistant responses
 /// * `assistant_post` - Text to insert after assistant responses
 /// * `end` - Text to append at the very end of the prompt
-pub struct PromptFormat<'a> {
+struct PromptFormat<'a> {
     /// Text to insert at the very beginning of the prompt
     begin: &'a str,
     /// Text to insert before system messages
@@ -167,7 +167,7 @@ impl Default for PromptFormat<'_> {
 }
 
 /// Defines the prompt format used by Anthropic's language models like Claude.
-pub const ANTHROPIC_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+const ANTHROPIC_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "",
     system_pre: "",
     system_post: "\n",
@@ -179,7 +179,7 @@ pub const ANTHROPIC_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
 };
 
 /// Defines the prompt format used by Mistral AI's language models.
-pub const MISTRAL_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+const MISTRAL_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "",
     system_pre: "[INST] <<SYS>>",
     system_post: "<</SYS>> [/INST]",
@@ -191,7 +191,7 @@ pub const MISTRAL_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
 };
 
 /// Defines the prompt format used by LLaMA 3 language models.
-pub const LLAMA3_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+const LLAMA3_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "<|begin_of_text|>",
     system_pre: "<|start_header_id|>system<|end_header_id|>\n\n",
     system_post: "<|eot_id|>",
@@ -203,7 +203,7 @@ pub const LLAMA3_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
 };
 
 /// Defines the prompt format used by Command-R language models.
-pub const COMMAND_R_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+const COMMAND_R_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "",
     system_pre: "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>",
     system_post: "<|END_OF_TURN_TOKEN|>",
@@ -215,7 +215,7 @@ pub const COMMAND_R_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
 };
 
 /// Defines the prompt format used by Qwen language models.
-pub const QWEN_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+const QWEN_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "",
     system_pre: "<|im_start|>system\n",
     system_post: "<|im_end|>",
