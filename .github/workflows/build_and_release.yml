@@ -1,100 +1,221 @@
-name: Build and Release
+name: Rust CI
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*'  # Trigger the workflow on push to tags that match 'v*'
+      - "v*"
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        rust: [stable]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v3
 
-    - name: Set up Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: ${{ matrix.rust }}
-        profile: minimal
-        override: true
+      # Install Rust on Linux and macOS
+      - name: Install Rust on Unix
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "Installing Rust on Linux/macOS..."
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          source $HOME/.cargo/env
+          rustc --version
 
-    - name: Build project
-      run: cargo build --release
+      # Install Rust on Windows
+      - name: Install Rust on Windows
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Write-Host "Installing Rust on Windows..."
+          Invoke-WebRequest -Uri https://win.rustup.rs -OutFile rustup-init.exe
+          Start-Process -FilePath .\rustup-init.exe -ArgumentList "-y", "--no-modify-path" -NoNewWindow -Wait
+          echo "$Env:USERPROFILE\.cargo\bin" | Out-File -FilePath $Env:GITHUB_PATH -Encoding utf8 -Append
+          $Env:PATH += ";$Env:USERPROFILE\.cargo\bin"
+          rustc --version
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ matrix.os }}-release
-        path: target/release/
+      - name: Run build
+        run: |
+          cargo build --release
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-binary
+          path: |
+            target/release/your-binary-name
+            target/release/your-binary-name.exe
 
   release:
     needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-latest-binary
+          path: ./linux
 
-    - name: Download Linux artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: ubuntu-latest-release
-        path: target/release/linux
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: macos-latest-binary
+          path: ./macos
 
-    - name: Download macOS artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: macos-latest-release
-        path: target/release/macos
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-latest-binary
+          path: ./windows
 
-    - name: Download Windows artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: windows-latest-release
-        path: target/release/windows
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }}
-        draft: false
-        prerelease: false
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./linux/your-binary-name
+          asset_name: your-binary-name-linux
+          asset_content_type: application/octet-stream
 
-    - name: Upload Release Asset (Linux)
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./target/release/linux/your-binary-name
-        asset_name: your-binary-name-linux
-        asset_content_type: application/octet-stream
+      - name: Upload macOS Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./macos/your-binary-name
+          asset_name: your-binary-name-macos
+          asset_content_type: application/octet-stream
 
-    - name: Upload Release Asset (macOS)
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./target/release/macos/your-binary-name
-        asset_name: your-binary-name-macos
-        asset_content_type: application/octet-stream
+      - name: Upload Windows Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./windows/your-binary-name.exe
+          asset_name: your-binary-name-windows.exe
+          asset_content_type: application/octet-stream
+# name: Build and Release
 
-    - name: Upload Release Asset (Windows)
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./target/release/windows/your-binary-name.exe
-        asset_name: your-binary-name-windows.exe
-        asset_content_type: application/octet-stream
+# on:
+#   push:
+#     tags:
+#       - 'v*'  # Trigger the workflow on push to tags that match 'v*'
+
+# jobs:
+#   build:
+#     runs-on: ${{ matrix.os }}
+#     strategy:
+#       matrix:
+#         os: [ubuntu-latest, macos-latest, windows-latest]
+#         rust: [stable]
+
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v3
+
+#     - name: Set up Rust
+#       uses: actions-rs/toolchain@v1
+#       with:
+#         toolchain: ${{ matrix.rust }}
+#         profile: minimal
+#         override: true
+
+#     - name: Build project
+#       run: cargo build --release
+
+#     - name: Upload artifact
+#       uses: actions/upload-artifact@v3
+#       with:
+#         name: ${{ matrix.os }}-release
+#         path: target/release/
+
+#   release:
+#     needs: build
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: Checkout code
+#       uses: actions/checkout@v3
+
+#     - name: Download Linux artifact
+#       uses: actions/download-artifact@v3
+#       with:
+#         name: ubuntu-latest-release
+#         path: target/release/linux
+
+#     - name: Download macOS artifact
+#       uses: actions/download-artifact@v3
+#       with:
+#         name: macos-latest-release
+#         path: target/release/macos
+
+#     - name: Download Windows artifact
+#       uses: actions/download-artifact@v3
+#       with:
+#         name: windows-latest-release
+#         path: target/release/windows
+
+#     - name: Create Release
+#       id: create_release
+#       uses: actions/create-release@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         tag_name: ${{ github.ref_name }}
+#         release_name: Release ${{ github.ref_name }}
+#         draft: false
+#         prerelease: false
+
+#     - name: Upload Release Asset (Linux)
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ steps.create_release.outputs.upload_url }}
+#         asset_path: ./target/release/linux/your-binary-name
+#         asset_name: your-binary-name-linux
+#         asset_content_type: application/octet-stream
+
+#     - name: Upload Release Asset (macOS)
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ steps.create_release.outputs.upload_url }}
+#         asset_path: ./target/release/macos/your-binary-name
+#         asset_name: your-binary-name-macos
+#         asset_content_type: application/octet-stream
+
+#     - name: Upload Release Asset (Windows)
+#       uses: actions/upload-release-asset@v1
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       with:
+#         upload_url: ${{ steps.create_release.outputs.upload_url }}
+#         asset_path: ./target/release/windows/your-binary-name.exe
+#         asset_name: your-binary-name-windows.exe
+#         asset_content_type: application/octet-stream
