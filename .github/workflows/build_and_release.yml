@@ -52,8 +52,8 @@ jobs:
         with:
           name: ${{ matrix.os }}-binary
           path: |
-            target/release/your-binary-name
-            target/release/your-binary-name.exe
+            target/release/straico-proxy
+            target/release/straico-proxy.exe
 
   release:
     needs: build
@@ -96,8 +96,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./linux/your-binary-name
-          asset_name: your-binary-name-linux
+          asset_path: ./linux/straico-proxy
+          asset_name: straico-proxy-linux
           asset_content_type: application/octet-stream
 
       - name: Upload macOS Asset
@@ -106,8 +106,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./macos/your-binary-name
-          asset_name: your-binary-name-macos
+          asset_path: ./macos/straico-proxy
+          asset_name: striaco-proxy-macos
           asset_content_type: application/octet-stream
 
       - name: Upload Windows Asset
@@ -116,8 +116,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./windows/your-binary-name.exe
-          asset_name: your-binary-name-windows.exe
+          asset_path: ./windows/straico-proxy.exe
+          asset_name: straico-proxy-windows.exe
           asset_content_type: application/octet-stream
 # name: Build and Release
 
