@@ -20,18 +20,22 @@ The repository includes a proxy server that allows you to send OpenAI-compatible
    - Ensure you have the `STRAICO_API_KEY` environment variable set with your Straico API key.
 
 2. **Run the Proxy Server**:
+
 Option 1: Download and run the release binary
 - Download the latest release binary for your platform from the GitHub releases page
+
 - For Linux:
   ```sh
   chmod +x straico-proxy
   ./straico-proxy
   ```
+
 - For macOS:
   ```sh
   chmod +x straico-proxy
   ./straico-proxy
   ```
+
 - For Windows:
   - Download the .exe file
   - Double click the executable or run from command prompt:
@@ -45,6 +49,7 @@ Option 1: Download and run the release binary
     cargo install --git https://github.com/straico/straico-client
     straico-proxy
     ```
+
   - Or clone and install locally:
     ```sh
     git clone https://github.com/straico/straico-client
