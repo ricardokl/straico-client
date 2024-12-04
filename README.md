@@ -20,11 +20,38 @@ The repository includes a proxy server that allows you to send OpenAI-compatible
    - Ensure you have the `STRAICO_API_KEY` environment variable set with your Straico API key.
 
 2. **Run the Proxy Server**:
-   - Navigate to the `src` directory.
-   - Run the server using the command:
-     ```sh
-     cargo run
-     ```
+Option 1: Download and run the release binary
+- Download the latest release binary for your platform from the GitHub releases page
+- For Linux:
+  ```sh
+  chmod +x straico-proxy
+  ./straico-proxy
+  ```
+- For macOS:
+  ```sh
+  chmod +x straico-proxy
+  ./straico-proxy
+  ```
+- For Windows:
+  - Download the .exe file
+  - Double click the executable or run from command prompt:
+  ```cmd
+  straico-proxy.exe
+  ```
+
+  Option 2: Install via cargo
+  - Install directly from GitHub:
+    ```sh
+    cargo install --git https://github.com/straico/straico-client
+    straico-proxy
+    ```
+  - Or clone and install locally:
+    ```sh
+    git clone https://github.com/straico/straico-client
+    cd straico-client
+    cargo install --path .
+    straico-proxy
+    ```
 
 3. **Send Requests**:
    - Use any HTTP client to send requests to the proxy server.
@@ -42,17 +69,17 @@ The repository includes a proxy server that allows you to send OpenAI-compatible
      }'
      ```
 
-### Endpoints
-
-- **Chat Completions**: `/v1/chat/completions`
-- **Image Generation**: `/v0/images/generate`
-- **File Uploads**: `/v1/files/upload`
-- **Model Information**: `/v1/models`
-- **User Data**: `/v0/user`
-
 ### Response Format
 
 The proxy server ensures that responses from the Straico API are formatted to be compatible with OpenAI's response structure. This includes handling of completion data, error messages, and other relevant fields.
+
+### Tools
+
+Tools usage is currently considered experimental.
+
+### Streaming
+
+Streaming is currently not implemented.
 
 ## Examples
 
@@ -73,19 +100,3 @@ cargo run --example <example_name>
 ```
 
 Replace `<example_name>` with the name of the example you want to run (e.g., `completion`).
-
-## Dependencies
-
-- `anyhow`: For error handling.
-- `actix-web`: For building the proxy server.
-- `reqwest`: For making HTTP requests to the Straico API.
-- `serde`: For serialization and deserialization of JSON data.
-- `tokio`: For asynchronous runtime.
-
-## Contributing
-
-Contributions to this repository are welcome! Please feel free to open issues or submit pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
