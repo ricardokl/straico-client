@@ -1,7 +1,10 @@
 use anyhow::Result;
+// use futures::task::Poll;
+// use futures::Stream;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+// use std::pin::Pin;
 
 /// Represents a collection of completion data with associated pricing and word count statistics.
 ///
@@ -91,20 +94,20 @@ pub struct Model {
 /// * `model` - Name/identifier of the model used
 /// * `created` - Unix timestamp of when this completion was created
 /// * `usage` - Token usage statistics for this completion
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Completion {
     /// Vector of generated response choices from the model
-    choices: Vec<Choice>,
+    pub choices: Vec<Choice>,
     /// The type/category of response object (e.g. "chat.completion")
-    object: Box<str>,
+    pub object: Box<str>,
     /// Unique identifier for this completion
-    id: Box<str>,
+    pub id: Box<str>,
     /// Name/identifier of the model used for generation
-    model: Box<str>,
+    pub model: Box<str>,
     /// Unix timestamp of when this completion was created
-    created: u64,
+    pub created: u64,
     /// Token usage statistics for this completion
-    usage: Usage,
+    pub usage: Usage,
 }
 
 /// Represents token usage statistics for a language model completion.
@@ -116,7 +119,7 @@ pub struct Completion {
 /// * `prompt_tokens` - Number of tokens in the input/prompt text
 /// * `completion_tokens` - Number of tokens in the generated completion/output
 /// * `total_tokens` - Total combined token count (prompt + completion)
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Usage {
     /// Number of tokens in the input/prompt text
     prompt_tokens: u32,
@@ -135,14 +138,14 @@ pub struct Usage {
 /// * `message` - The actual response content and metadata
 /// * `index` - Zero-based position of this choice in the list of responses
 /// * `finish_reason` - Why the model stopped generating (e.g. "stop", "length", "tool_calls")
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Choice {
     /// The message content and metadata for this choice
-    message: Message,
+    pub message: Message,
     /// Zero-based position of this choice in the list of responses
-    index: u8,
+    pub index: u8,
     /// Reason why the model stopped generating (e.g. "stop", "length", "tool_calls")
-    finish_reason: String,
+    pub finish_reason: Box<str>,
 }
 
 /// Represents different types of messages in a conversation.
@@ -150,7 +153,7 @@ pub struct Choice {
 /// This enum is used to differentiate between messages from different roles in a chat or
 /// conversation context. It supports serialization/deserialization with serde and uses
 /// the "role" field as a tag with lowercase values.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "role", rename_all = "lowercase")]
 pub enum Message {
     /// A message from a user, containing text content
@@ -187,12 +190,26 @@ pub enum ToolCall {
 /// # Fields
 /// * `name` - The name of the function to be called
 /// * `arguments` - The function arguments as a dynamic JSON Value
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct FunctionData {
     /// The name of the function to call
     name: String,
     /// The arguments to pass to the function as a JSON Value
     arguments: Value,
+}
+
+// Custom serializer to convert Value to String
+impl Serialize for FunctionData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut state = serializer.serialize_struct("FunctionData", 2)?;
+        state.serialize_field("name", &self.name)?;
+        state.serialize_field("arguments", &self.arguments.to_string())?;
+        state.end()
+    }
 }
 
 impl CompletionData {
@@ -222,9 +239,9 @@ impl Completion {
             x.message.into_tool_calls_response()?;
             if let Message::Assistant { content, .. } = &x.message {
                 if content.is_none() {
-                    x.finish_reason = "tool_calls".to_string();
-                } else if x.finish_reason == "end_turn" {
-                    x.finish_reason = "stop".to_string();
+                    x.finish_reason = "tool_calls".into();
+                } else if x.finish_reason == "end_turn".into() {
+                    x.finish_reason = "stop".into();
                 }
             }
         }
@@ -264,7 +281,7 @@ impl Message {
                         .map(|s| {
                             serde_json::from_str::<FunctionData>(s).map(|function_data| {
                                 ToolCall::Function {
-                                    id: String::new(),
+                                    id: String::from("func"),
                                     function: function_data,
                                 }
                             })
@@ -277,5 +294,18 @@ impl Message {
             }
         }
         Ok(())
+    }
+    pub fn new_assistant_content(content: String) -> Self {
+        Message::Assistant {
+            content: Some(content),
+            tool_calls: None,
+        }
+    }
+
+    pub fn new_assistant_tool_calls(tool_calls: Vec<ToolCall>) -> Self {
+        Message::Assistant {
+            content: None,
+            tool_calls: Some(tool_calls),
+        }
     }
 }
