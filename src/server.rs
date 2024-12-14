@@ -6,6 +6,7 @@ use actix_web::{error::ErrorInternalServerError, post, web, Either, Error, HttpR
 use futures::{stream, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::iter::Iterator;
 use straico::chat::{Chat, Tool};
 use straico::endpoints::completion::completion_request::CompletionRequest;
 #[allow(unused_imports)]
@@ -89,16 +90,16 @@ pub struct ChoiceStream {
 #[derive(Serialize, Debug)]
 pub struct Delta {
     #[serde(skip_serializing_if = "Option::is_none")]
-    role: Option<String>,
+    role: Option<Box<str>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    content: Option<String>,
+    content: Option<Box<str>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     tool_calls: Option<Vec<ToolCall>>,
 }
 
 pub struct DeltaIterator<
-    T: Iterator<Item = String>,
-    I: Iterator<Item = String>,
+    T: Iterator<Item = Box<str>>,
+    I: Iterator<Item = Box<str>>,
     U: Iterator<Item = Vec<ToolCall>>,
 > {
     role: T,
@@ -106,38 +107,96 @@ pub struct DeltaIterator<
     tool_calls: Option<U>,
 }
 
+pub struct ChoiceStreamIterator<
+    T: Iterator<Item = Box<str>>,
+    I: Iterator<Item = Box<str>>,
+    U: Iterator<Item = Vec<ToolCall>>,
+> {
+    index: u8,
+    delta: DeltaIterator<T, I, U>,
+    finish_reason: Option<Box<str>>,
+}
+
+pub struct CompletionStreamIterator<
+    T: Iterator<Item = Box<str>>,
+    I: Iterator<Item = Box<str>>,
+    U: Iterator<Item = Vec<ToolCall>>,
+> {
+    choices: Vec<ChoiceStreamIterator<T, I, U>>,
+    object: Box<str>,
+    id: Box<str>,
+    model: Box<str>,
+    created: u64,
+    usage: Usage,
+}
+
 impl IntoIterator for Delta {
     type Item = Delta;
     type IntoIter = DeltaIterator<
-        std::vec::IntoIter<String>,
-        std::vec::IntoIter<String>,
+        std::vec::IntoIter<Box<str>>,
+        std::vec::IntoIter<Box<str>>,
         std::vec::IntoIter<Vec<ToolCall>>,
     >;
 
     fn into_iter(self) -> Self::IntoIter {
         DeltaIterator {
             role: vec![self.role.unwrap()].into_iter(),
-            content: match self.content {
-                Some(c) => Some(
-                    c.split_inclusive("")
-                        .map(|x| x.to_string())
-                        .collect::<Vec<String>>()
-                        .into_iter(),
-                ),
-                None => None,
-            },
-            tool_calls: match self.tool_calls {
-                Some(t) => Some(vec![t].into_iter()),
-                None => None,
-            },
+            content: self.content.map(|c| {
+                c.split_whitespace()
+                    .map(Box::from)
+                    .collect::<Vec<Box<_>>>()
+                    .into_iter()
+            }),
+            tool_calls: self.tool_calls.map(|t| vec![t].into_iter()),
+            // tool_calls: match self.tool_calls {
+            //     Some(t) => Some(vec![t].into_iter()),
+            //     None => None,
+            // },
+        }
+    }
+}
+
+impl IntoIterator for ChoiceStream {
+    type Item = ChoiceStream;
+    type IntoIter = ChoiceStreamIterator<
+        std::vec::IntoIter<Box<str>>,
+        std::vec::IntoIter<Box<str>>,
+        std::vec::IntoIter<Vec<ToolCall>>,
+    >;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ChoiceStreamIterator {
+            index: self.index,
+            delta: self.delta.into_iter(),
+            finish_reason: self.finish_reason,
+        }
+    }
+}
+
+impl IntoIterator for CompletionStream {
+    type Item = CompletionStream;
+    type IntoIter = CompletionStreamIterator<
+        std::vec::IntoIter<Box<str>>,
+        std::vec::IntoIter<Box<str>>,
+        std::vec::IntoIter<Vec<ToolCall>>,
+    >;
+
+    fn into_iter(self) -> Self::IntoIter {
+        CompletionStreamIterator {
+            choices: self.choices.into_iter().map(|x| x.into_iter()).collect(),
+            object: self.object,
+            id: self.id,
+            model: self.model,
+            created: self.created,
+            usage: self.usage,
         }
     }
 }
 
 impl<I, T, U> Iterator for DeltaIterator<I, T, U>
 where
-    I: Iterator<Item = String>,
-    T: Iterator<Item = String>,
+    I: Iterator<Item = Box<str>>,
+    T: Iterator<Item = Box<str>>,
     U: Iterator<Item = Vec<ToolCall>>,
 {
     type Item = Delta;
@@ -163,12 +222,57 @@ where
     }
 }
 
+impl Iterator
+    for ChoiceStreamIterator<
+        std::vec::IntoIter<Box<str>>,
+        std::vec::IntoIter<Box<str>>,
+        std::vec::IntoIter<Vec<ToolCall>>,
+    >
+{
+    type Item = ChoiceStream;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let choice = ChoiceStream {
+            index: self.index,
+            delta: self.delta.next()?,
+            finish_reason: self.finish_reason.clone(),
+        };
+        Some(choice)
+    }
+}
+
+impl Iterator
+    for CompletionStreamIterator<
+        std::vec::IntoIter<Box<str>>,
+        std::vec::IntoIter<Box<str>>,
+        std::vec::IntoIter<Vec<ToolCall>>,
+    >
+{
+    type Item = CompletionStream;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let completion = CompletionStream {
+            choices: self
+                .choices
+                .iter_mut()
+                .map(|x| x.next())
+                .collect::<Option<Vec<ChoiceStream>>>()?,
+            object: self.object.clone(),
+            id: self.id.clone(),
+            model: self.model.clone(),
+            created: self.created,
+            usage: self.usage.clone(),
+        };
+        Some(completion)
+    }
+}
+
 impl From<Message> for Delta {
     fn from(value: Message) -> Self {
         match value {
             Message::User { content } => Delta {
                 role: Some("user".into()),
-                content: Some(content),
+                content: Some(content.into()),
                 tool_calls: None,
             },
             Message::Assistant {
@@ -213,111 +317,6 @@ impl From<Completion> for CompletionStream {
             created: value.created,
             usage: value.usage,
         }
-    }
-}
-
-pub struct ChoiceStreamIterator<
-    T: Iterator<Item = String>,
-    I: Iterator<Item = String>,
-    U: Iterator<Item = Vec<ToolCall>>,
-> {
-    index: u8,
-    delta: DeltaIterator<T, I, U>,
-    finish_reason: Option<Box<str>>,
-}
-
-pub struct CompletionStreamIterator<
-    T: Iterator<Item = String>,
-    I: Iterator<Item = String>,
-    U: Iterator<Item = Vec<ToolCall>>,
-> {
-    choices: Vec<ChoiceStreamIterator<T, I, U>>,
-    object: Box<str>,
-    id: Box<str>,
-    model: Box<str>,
-    created: u64,
-    usage: Usage,
-}
-
-impl IntoIterator for ChoiceStream {
-    type Item = ChoiceStream;
-    type IntoIter = ChoiceStreamIterator<
-        std::vec::IntoIter<String>,
-        std::vec::IntoIter<String>,
-        std::vec::IntoIter<Vec<ToolCall>>,
-    >;
-
-    fn into_iter(self) -> Self::IntoIter {
-        ChoiceStreamIterator {
-            index: self.index,
-            delta: self.delta.into_iter(),
-            finish_reason: self.finish_reason,
-        }
-    }
-}
-
-impl IntoIterator for CompletionStream {
-    type Item = CompletionStream;
-    type IntoIter = CompletionStreamIterator<
-        std::vec::IntoIter<String>,
-        std::vec::IntoIter<String>,
-        std::vec::IntoIter<Vec<ToolCall>>,
-    >;
-
-    fn into_iter(self) -> Self::IntoIter {
-        CompletionStreamIterator {
-            choices: self.choices.into_iter().map(|x| x.into_iter()).collect(),
-            object: self.object,
-            id: self.id,
-            model: self.model,
-            created: self.created,
-            usage: self.usage,
-        }
-    }
-}
-
-impl Iterator
-    for ChoiceStreamIterator<
-        std::vec::IntoIter<String>,
-        std::vec::IntoIter<String>,
-        std::vec::IntoIter<Vec<ToolCall>>,
-    >
-{
-    type Item = ChoiceStream;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let choice = ChoiceStream {
-            index: self.index,
-            delta: self.delta.next()?,
-            finish_reason: self.finish_reason.clone(),
-        };
-        Some(choice)
-    }
-}
-
-impl Iterator
-    for CompletionStreamIterator<
-        std::vec::IntoIter<String>,
-        std::vec::IntoIter<String>,
-        std::vec::IntoIter<Vec<ToolCall>>,
-    >
-{
-    type Item = CompletionStream;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let completion = CompletionStream {
-            choices: self
-                .choices
-                .iter_mut()
-                .map(|x| x.next())
-                .collect::<Option<Vec<ChoiceStream>>>()?,
-            object: self.object.clone(),
-            id: self.id.clone(),
-            model: self.model.clone(),
-            created: self.created,
-            usage: self.usage.clone(),
-        };
-        Some(completion)
     }
 }
 

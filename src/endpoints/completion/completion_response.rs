@@ -1,10 +1,7 @@
 use anyhow::Result;
-// use futures::task::Poll;
-// use futures::Stream;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-// use std::pin::Pin;
 
 /// Represents a collection of completion data with associated pricing and word count statistics.
 ///
@@ -18,7 +15,7 @@ use std::collections::HashMap;
 pub struct CompletionData {
     /// A map of completion identifiers to their associated model data containing
     /// completion responses, pricing and word count information
-    completions: HashMap<String, Model>,
+    completions: HashMap<Box<str>, Model>,
     /// Price breakdown showing input, output and total costs across all completions
     overall_price: Price,
     /// Word count statistics showing input, output and total counts across all completions
@@ -157,17 +154,17 @@ pub struct Choice {
 #[serde(tag = "role", rename_all = "lowercase")]
 pub enum Message {
     /// A message from a user, containing text content
-    User { content: String },
+    User { content: Box<str> },
     /// A message from the AI assistant, which may contain text content and/or tool calls
     Assistant {
-        content: Option<String>,
+        content: Option<Box<str>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         tool_calls: Option<Vec<ToolCall>>,
     },
     /// A system message providing context or instructions
-    System { content: String },
+    System { content: Box<str> },
     /// A message from a tool containing output or results
-    Tool { content: String },
+    Tool { content: Box<str> },
 }
 
 /// Represents a call to a function-based tool in the conversation.
@@ -297,7 +294,7 @@ impl Message {
     }
     pub fn new_assistant_content(content: String) -> Self {
         Message::Assistant {
-            content: Some(content),
+            content: Some(content.into()),
             tool_calls: None,
         }
     }
