@@ -38,8 +38,7 @@ struct OpenAiRequest<'a> {
     max_tokens: Option<u32>,
     /// Controls randomness in the response generation (0.0 to 1.0)
     temperature: Option<f32>,
-    /// Whether to stream the response (currently unused)
-    #[allow(dead_code)]
+    /// Whether to stream the response 
     stream: Option<bool>,
     /// List of tools/functions available to the model during completion
     tools: Option<Vec<Tool>>,
@@ -97,31 +96,19 @@ pub struct Delta {
     tool_calls: Option<Vec<ToolCall>>,
 }
 
-pub struct DeltaIterator<
-    T: Iterator<Item = Box<str>>,
-    I: Iterator<Item = Box<str>>,
-    U: Iterator<Item = Vec<ToolCall>>,
-> {
+pub struct DeltaIterator<T, I, U> {
     role: T,
     content: Option<I>,
     tool_calls: Option<U>,
 }
 
-pub struct ChoiceStreamIterator<
-    T: Iterator<Item = Box<str>>,
-    I: Iterator<Item = Box<str>>,
-    U: Iterator<Item = Vec<ToolCall>>,
-> {
+pub struct ChoiceStreamIterator<T, I, U> {
     index: u8,
     delta: DeltaIterator<T, I, U>,
     finish_reason: Option<Box<str>>,
 }
 
-pub struct CompletionStreamIterator<
-    T: Iterator<Item = Box<str>>,
-    I: Iterator<Item = Box<str>>,
-    U: Iterator<Item = Vec<ToolCall>>,
-> {
+pub struct CompletionStreamIterator<T, I, U> {
     choices: Vec<ChoiceStreamIterator<T, I, U>>,
     object: Box<str>,
     id: Box<str>,
@@ -142,16 +129,12 @@ impl IntoIterator for Delta {
         DeltaIterator {
             role: vec![self.role.unwrap()].into_iter(),
             content: self.content.map(|c| {
-                c.split_whitespace()
+                c.split_inclusive(' ')
                     .map(Box::from)
                     .collect::<Vec<Box<_>>>()
                     .into_iter()
             }),
             tool_calls: self.tool_calls.map(|t| vec![t].into_iter()),
-            // tool_calls: match self.tool_calls {
-            //     Some(t) => Some(vec![t].into_iter()),
-            //     None => None,
-            // },
         }
     }
 }
@@ -370,7 +353,7 @@ async fn openai_completion<'a>(
     let parsed_response = response.parse().map_err(ErrorInternalServerError)?;
 
     match stream {
-        Some(true) => {
+        Some(true) | None => {
             let i = CompletionStream::from(parsed_response);
             let stream = stream::iter(i).map(|chunk| {
                 let json = serde_json::to_string(&chunk).unwrap();
