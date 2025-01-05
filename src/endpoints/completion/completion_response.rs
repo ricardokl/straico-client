@@ -233,7 +233,7 @@ impl Completion {
     /// Returns the processed completion wrapped in a Result
     pub fn parse(mut self) -> Result<Completion> {
         for x in self.choices.iter_mut() {
-            x.message.into_tool_calls_response()?;
+            x.message.tool_calls_response()?;
             if let Message::Assistant { content, .. } = &x.message {
                 if content.is_none() {
                     x.finish_reason = "tool_calls".into();
@@ -261,7 +261,7 @@ impl Message {
     /// # Returns
     /// - `Ok(())` if processing succeeds or if no tool calls are found
     /// - `Err` if JSON parsing fails
-    fn into_tool_calls_response(&mut self) -> Result<()> {
+    fn tool_calls_response(&mut self) -> Result<()> {
         if let Message::Assistant {
             content,
             tool_calls,

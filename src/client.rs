@@ -70,7 +70,7 @@ impl Into<StraicoClient> for Client {
 #[derive(Clone, Default)]
 pub struct StraicoClient(Client);
 
-impl<'a> StraicoClient {
+impl StraicoClient {
     /// Creates a new instance of StraicoClient with default configuration
     ///
     /// This is a convenience constructor that creates a new reqwest::Client with default settings
@@ -88,7 +88,7 @@ impl<'a> StraicoClient {
     /// # Returns
     ///
     /// A `StraicoRequestBuilder` configured for making completion requests
-    pub fn completion(
+    pub fn completion<'a>(
         self,
     ) -> StraicoRequestBuilder<NoApiKey, CompletionRequest<'a>, CompletionData> {
         self.0.post(PostEndpoint::Completion.as_ref()).into()

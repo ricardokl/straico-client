@@ -52,7 +52,7 @@ struct AppState {
 async fn main() -> std::io::Result<()> {
     let cli = Cli::parse();
 
-    let api_key = cli.api_key.unwrap();
+    let api_key = cli.api_key.expect("API key not set");
 
     let addr = format!("{}:{}", cli.host, cli.port);
     println!("Starting Straico proxy server...");
@@ -70,7 +70,7 @@ async fn main() -> std::io::Result<()> {
                 debug: cli.debug,
             }))
             .service(server::openai_completion)
-            .default_service(web::to(|| HttpResponse::NotFound()))
+            .default_service(web::to(HttpResponse::NotFound))
     })
     .bind(addr)?
     .run()

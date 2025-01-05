@@ -204,15 +204,20 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         let delta = Delta {
             role: self.role.next(),
-            content: match &mut self.content {
-                Some(c) => c.next(),
-                None => None,
-            },
-            // content: self.content.next(),
-            tool_calls: match &mut self.tool_calls {
-                Some(t) => t.next(),
-                None => None,
-            },
+            //content: match &mut self.content {
+            //    Some(c) => c.next(),
+            //    None => None,
+            //},
+            content: self.content.as_mut()
+                .and_then(Iterator::next),
+                //.map(Iterator::next).flatten(),
+            tool_calls: self.tool_calls.as_mut()
+                .and_then(Iterator::next),
+                //.map(Iterator::next).flatten(),
+            //tool_calls: match &mut self.tool_calls {
+            //    Some(t) => t.next(),
+            //    None => None,
+            //},
         };
         if delta.content.is_none() && delta.tool_calls.is_none() {
             None
@@ -272,7 +277,7 @@ impl From<Message> for Delta {
         match value {
             Message::User { content } => Delta {
                 role: Some("user".into()),
-                content: Some(content.into()),
+                content: Some(content),
                 tool_calls: None,
             },
             Message::Assistant {
@@ -353,16 +358,16 @@ async fn openai_completion<'a>(
         .json(req_inner_oa)
         .send()
         .await
-        .map_err(|e| ErrorInternalServerError(e))?
+       .map_err(ErrorInternalServerError)?
         .get_completion()
-        .map_err(|e| ErrorInternalServerError(e))?;
+        .map_err(ErrorInternalServerError)?;
 
     if data.debug {
         eprintln!("\n\n===== Received response: =====");
         eprintln!("\n{}", serde_json::to_string_pretty(&response)?);
     }
 
-    let parsed_response = response.parse().map_err(|e| ErrorInternalServerError(e))?;
+    let parsed_response = response.parse().map_err(ErrorInternalServerError)?;
 
     match stream {
         Some(true) => {

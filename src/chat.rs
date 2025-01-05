@@ -198,7 +198,7 @@ const QWEN_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     end: "<|im_start|>assistant\n",
 };
 
-impl<'a> Chat {
+impl Chat {
     /// Converts a chat conversation into a formatted prompt string for language models
     ///
     /// # Arguments
@@ -211,7 +211,7 @@ impl<'a> Chat {
     ///
     /// Returns a Prompt instance containing the formatted conversation text with appropriate
     /// model-specific formatting and any tool definitions
-    pub fn to_prompt(self, tools: Option<Vec<Tool>>, model: &str) -> Prompt<'a> {
+    pub fn to_prompt<'a>(self, tools: Option<Vec<Tool>>, model: &str) -> Prompt<'a> {
         let format = if model.to_lowercase().contains("anthropic") {
             ANTHROPIC_PROMPT_FORMAT
         } else if model.to_lowercase().contains("mistral") {
@@ -248,7 +248,7 @@ For each tool call, return a json object with function name and arguments within
         if let Some(tools) = &tools {
             tools_message.push_str(pre_tools);
             for tool in tools {
-                tools_message.push_str(&format!("{}", serde_json::to_string_pretty(tool).unwrap()));
+                tools_message.push_str(&serde_json::to_string_pretty(tool).unwrap());
             }
             tools_message.push_str(post_tools);
         }
@@ -320,7 +320,7 @@ For each tool call, return a json object with function name and arguments within
                     }
 
                     output.push_str("\n<tool_response>\n");
-                    output.push_str(&content);
+                    output.push_str(content);
                     output.push_str("\n</tool_response>");
 
                     // Check if next message is not a tool

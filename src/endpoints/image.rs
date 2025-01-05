@@ -97,6 +97,7 @@ impl ImageRequest {
     /// # Returns
     ///
     /// A new `ImageRequestBuilder` instance with no fields set.
+    #[allow(clippy::new_ret_no_self)]
     pub fn new() -> ImageRequestBuilder<ModelNotSet, DescriptionNotSet, SizeNotSet, VariationsNotSet>
     {
         ImageRequestBuilder::default()

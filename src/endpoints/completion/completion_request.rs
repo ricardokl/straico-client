@@ -77,7 +77,7 @@ impl<'a> From<&'a str> for Prompt<'a> {
     }
 }
 
-impl<'a> AsRef<str> for Prompt<'a> {
+impl AsRef<str> for Prompt<'_> {
     /// Implements the `AsRef<str>` trait for `Prompt`, allowing borrowing of the underlying string.
     ///
     /// This implementation provides a way to get a string slice reference from a `Prompt` instance,
@@ -255,6 +255,7 @@ impl<'a> CompletionRequest<'a> {
     ///
     /// # Returns
     /// A `CompletionRequestBuilder` with default values and no models or message set.
+    #[allow(clippy::new_ret_no_self)]
     pub fn new() -> CompletionRequestBuilder<'a, ModelsNotSet, MessageNotSet> {
         CompletionRequestBuilder::default()
     }
