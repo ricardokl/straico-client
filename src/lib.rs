@@ -22,6 +22,8 @@ enum PostEndpoint {
     Image,
     Completion,
     File,
+    #[allow(dead_code)]
+    CreateRag,
 }
 
 impl AsRef<str> for GetEndpoint {
@@ -47,6 +49,7 @@ impl AsRef<str> for PostEndpoint {
             PostEndpoint::Image => "https://api.straico.com/v0/image/generation",
             PostEndpoint::Completion => "https://api.straico.com/v1/prompt/completion",
             PostEndpoint::File => "https://api.straico.com/v0/file/upload",
+            PostEndpoint::CreateRag =>  "https://api.straico.com/v0/rag"
         }
     }
 }

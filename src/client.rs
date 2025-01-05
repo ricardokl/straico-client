@@ -20,6 +20,9 @@ use crate::endpoints::model::ModelData;
 #[cfg(feature = "user")]
 use crate::endpoints::user::UserData;
 
+#[cfg(feature = "rag")]
+use crate::endpoints::rag::{RagRequest, RagResponse};
+
 use crate::endpoints::{
     completion::completion_request::CompletionRequest,
     completion::completion_response::CompletionData, ApiResponseData,
@@ -51,14 +54,20 @@ pub struct StraicoRequestBuilder<Api, Payload, Response>(
     PhantomData<Api>,
 );
 
-impl Into<StraicoClient> for Client {
-    /// Converts a reqwest::Client into a StraicoClient
-    ///
-    /// # Returns
-    ///
-    /// A new StraicoClient wrapping the provided reqwest::Client
-    fn into(self) -> StraicoClient {
-        StraicoClient(self)
+//impl Into<StraicoClient> for Client {
+//    /// Converts a reqwest::Client into a StraicoClient
+//    ///
+//    /// # Returns
+//    ///
+//    /// A new StraicoClient wrapping the provided reqwest::Client
+//    fn into(self) -> StraicoClient {
+//        StraicoClient(self)
+//    }
+//}
+
+impl From<Client> for StraicoClient {
+    fn from(value: Client) -> Self {
+        StraicoClient(value)
     }
 }
 
@@ -133,6 +142,11 @@ impl StraicoClient {
     pub fn user(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet, UserData> {
         self.0.get(GetEndpoint::User.as_ref()).into()
     }
+
+    #[cfg(feature = "rag")]
+    pub fn create_rag(self) -> StraicoRequestBuilder<NoApiKey, RagRequest, RagResponse> {
+            todo!()
+        }
 }
 
 impl<T, U> StraicoRequestBuilder<NoApiKey, T, U> {

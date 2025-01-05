@@ -10,7 +10,8 @@ user = []
 model = []
 image = []
 file = []
-default = ["user", "model", "image", "file"]
+rag = []
+default = ["user", "model", "image", "file", "rag"]
 
 [lib]
 name = "straico"

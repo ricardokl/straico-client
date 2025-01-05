@@ -7,6 +7,8 @@ pub mod image;
 pub mod model;
 #[cfg(feature = "user")]
 pub mod user;
+#[cfg(feature = "rag")]
+pub mod rag;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
