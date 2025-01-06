@@ -1,3 +1,4 @@
+use std::fmt;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -154,17 +155,103 @@ pub struct Choice {
 #[serde(tag = "role", rename_all = "lowercase")]
 pub enum Message {
     /// A message from a user, containing text content
-    User { content: Box<str> },
+    User { content: Content },
     /// A message from the AI assistant, which may contain text content and/or tool calls
     Assistant {
-        content: Option<Box<str>>,
+        content: Option<Content>,
         #[serde(skip_serializing_if = "Option::is_none")]
         tool_calls: Option<Vec<ToolCall>>,
     },
     /// A system message providing context or instructions
-    System { content: Box<str> },
+    System { content: Content },
     /// A message from a tool containing output or results
-    Tool { content: Box<str> },
+    Tool { content: Content },
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum Content {
+    Text(Box<str>),
+    TextArray(Vec<TextObject>),
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum TextObject {
+    Text { text: Box<str> }
+}
+
+impl From<Content> for String {
+    fn from(content: Content) -> Self {
+        match content {
+            Content::Text(text) => text.to_string(),
+            Content::TextArray(text_array) => {
+                let mut result = String::new();
+                for text_object in text_array {
+                    let TextObject::Text { text } = text_object;
+                    result.push_str(&text);
+                    result.push('\n');
+                }
+                result
+            }
+        }
+    }
+}
+
+impl Content {
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Content::Text(text) => text.is_empty(),
+            Content::TextArray(text_array) => text_array.iter().all(|text_object| match text_object {
+                TextObject::Text { text } => text.is_empty(),
+            }),
+        }
+    }
+
+    pub fn find(&self, pattern: &str) -> Option<usize> {
+        match self {
+            Content::Text(text) => text.find(pattern),
+            Content::TextArray(text_array) => {
+                let mut result = String::new();
+                for text_object in text_array {
+                    let TextObject::Text { text } = text_object; 
+                    result.push_str(text);
+                    result.push('\n');
+                }
+                result.find(pattern)
+            }
+        }
+    }
+
+    pub fn replace(&self, pattern: &str, replacement: &str) -> String {
+        match self {
+            Content::Text(text) => text.replace(pattern, replacement),
+            Content::TextArray(text_array) => {
+                let mut result = String::new();
+                for text_object in text_array {
+                    let TextObject::Text { text } = text_object; 
+                    result.push_str(text); 
+                    result.push('\n');
+                }
+                result.replace(pattern, replacement)
+            }
+        }
+    }
+}
+
+impl fmt::Display for Content {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Content::Text(text) => write!(f, "{}", text),
+            Content::TextArray(text_array) => {
+                for text_object in text_array {
+                    let TextObject::Text { text } = text_object;
+                    write!(f, "{} ", text)?;
+                }
+                Ok(())
+            }
+        }
+    }
 }
 
 /// Represents a call to a function-based tool in the conversation.
@@ -292,17 +379,18 @@ impl Message {
         }
         Ok(())
     }
-    pub fn new_assistant_content(content: String) -> Self {
-        Message::Assistant {
-            content: Some(content.into()),
-            tool_calls: None,
-        }
-    }
 
-    pub fn new_assistant_tool_calls(tool_calls: Vec<ToolCall>) -> Self {
-        Message::Assistant {
-            content: None,
-            tool_calls: Some(tool_calls),
-        }
-    }
+    //pub fn new_assistant_content(content: String) -> Self {
+    //    Message::Assistant {
+    //        content: Some(content.into()),
+    //        tool_calls: None,
+    //    }
+    //}
+    //
+    //pub fn new_assistant_tool_calls(tool_calls: Vec<ToolCall>) -> Self {
+    //    Message::Assistant {
+    //        content: None,
+    //        tool_calls: Some(tool_calls),
+    //    }
+    //}
 }

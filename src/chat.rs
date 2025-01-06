@@ -288,7 +288,7 @@ For each tool call, return a json object with function name and arguments within
                 ) if i > 0 => {
                     output.push_str(format.assistant_pre);
                     match (content, tool_calls) {
-                        (Some(c), None) => output.push_str(c),
+                        (Some(c), None) => output.push_str(&c.to_string()),
                         (None, Some(t)) => {
                             for tool_call in t {
                                 let ToolCall::Function { function, .. } = tool_call;
@@ -300,7 +300,7 @@ For each tool call, return a json object with function name and arguments within
                         }
                         // Maybe this is unreachable? Depends on the provider never answering like this.
                         (Some(c), Some(t)) => {
-                            output.push_str(c);
+                            output.push_str(&c.to_string());
                             for tool_call in t {
                                 let ToolCall::Function { function, .. } = tool_call;
                                 output.push_str(&format!(
@@ -320,7 +320,7 @@ For each tool call, return a json object with function name and arguments within
                     }
 
                     output.push_str("\n<tool_response>\n");
-                    output.push_str(content);
+                    output.push_str(&content.to_string());
                     output.push_str("\n</tool_response>");
 
                     // Check if next message is not a tool

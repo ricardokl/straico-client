@@ -257,10 +257,15 @@ impl Iterator
 
 impl From<Message> for Delta {
     fn from(value: Message) -> Self {
+        //let content_to_string = |content: Content| match content {
+        //    Content::Text(text) => Some(text),
+        //    Content::TextArray(texts) => Some(Box::from(texts.into_iter().map(|t| t.text).collect::<Vec<_>>().join(" "))),
+        //};
+
         match value {
             Message::User { content } => Delta {
                 role: Some("user".into()),
-                content: Some(content),
+                content: Some(content.to_string().into_boxed_str()),
                 tool_calls: None,
             },
             Message::Assistant {
@@ -268,17 +273,17 @@ impl From<Message> for Delta {
                 tool_calls,
             } => Delta {
                 role: Some("assistant".into()),
-                content,
+                content: content.map(|c| c.to_string().into_boxed_str()),
                 tool_calls,
             },
             Message::System { content } => Delta {
                 role: Some("system".into()),
-                content: Some(content),
+                content: Some(content.to_string().into_boxed_str()),
                 tool_calls: None,
             },
             Message::Tool { content } => Delta {
                 role: Some("function".into()),
-                content: Some(content),
+                content: Some(content.to_string().into_boxed_str()),
                 tool_calls: None,
             },
         }
