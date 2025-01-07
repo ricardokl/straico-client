@@ -11,7 +11,8 @@ model = []
 image = []
 file = []
 rag = []
-default = ["user", "model", "image", "file", "rag"]
+# default = ["user", "model", "image", "file", "rag"]
+default = []
 
 [lib]
 name = "straico"
@@ -31,3 +32,8 @@ clap = { version = "4.4", features = ["derive", "env"] }
 regex = "1.11.1"
 anyhow = "1.0.93"
 tokio = { version = "1.0", features = ["full"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
