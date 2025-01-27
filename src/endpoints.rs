@@ -5,31 +5,38 @@ pub mod file;
 pub mod image;
 #[cfg(feature = "model")]
 pub mod model;
-#[cfg(feature = "user")]
-pub mod user;
 #[cfg(feature = "rag")]
 pub mod rag;
+#[cfg(feature = "user")]
+pub mod user;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-/// A container for API response data
-///
-/// # Fields
-///
-/// * `data` - The response payload, containing one of several possible response types (if successful)
-/// * `error` - An error message string (if unsuccessful)
-/// * `success` - A boolean indicating whether the API call was successful
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ApiResponseData {
-    /// The response payload, containing one of several possible response types
-    #[serde(skip_serializing_if = "Option::is_none")]
-    data: Option<ResponseType>,
-    /// An error message if the request was unsuccessful
-    #[serde(skip_serializing_if = "Option::is_none")]
-    error: Option<String>,
-    /// A boolean indicating whether the API call was successful
     success: bool,
+    #[serde(flatten)]
+    response: ApiResponseVariant,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(untagged)]
+pub enum ApiResponseVariant {
+    Error {
+        error: String,
+    },
+    Message {
+        message: String,
+    },
+    Data {
+        data: ResponseType,
+    },
+    DetailedData {
+        data: ResponseType,
+        total_words: f64,
+        total_coins: f64,
+    },
 }
 
 /// An enum representing different types of API responses
@@ -62,31 +69,23 @@ pub enum ResponseType {
     #[cfg(feature = "user")]
     #[serde(skip_serializing)]
     User(user::UserData),
+    #[cfg(feature = "rag")]
+    #[serde(skip_serializing)]
+    Rag(rag::RagData),
 }
 
 impl ApiResponseData {
-    /// Extracts the completion data from the API response
-    ///
-    /// # Returns
-    ///
-    /// * `Ok(Completion)` - The completion data if the API call was successful
-    /// * `Err` - The error message if the API call failed
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if:
-    /// * The API call failed and returned an error message
-    /// * The response data was not of type Completion
     pub fn get_completion(self) -> Result<completion::completion_response::Completion> {
-        match self {
-            ApiResponseData {
-                data: Some(ResponseType::Completion(data)),
+        match self.response {
+            ApiResponseVariant::Data {
+                data: ResponseType::Completion(data),
+            } => Ok(data.get_completion_data()),
+            ApiResponseVariant::DetailedData {
+                data: ResponseType::Completion(data),
                 ..
-            } => Ok(data.get_completion()),
-            ApiResponseData {
-                error: Some(err), ..
-            } => Err(anyhow::Error::msg(err)),
-            _ => unreachable!(),
+            } => Ok(data.get_completion_data()),
+            ApiResponseVariant::Error { error } => Err(anyhow::Error::msg(error)),
+            _ => Err(anyhow::Error::msg("Invalid response type for completion")),
         }
     }
 }

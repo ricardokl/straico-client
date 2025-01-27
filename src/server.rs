@@ -2,14 +2,12 @@ use crate::AppState;
 use actix_web::http::StatusCode;
 use actix_web::HttpResponseBuilder;
 use actix_web::{error::ErrorInternalServerError, post, web, Either, Error, HttpResponse};
-#[allow(unused_imports)]
 use futures::{stream, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::iter::Iterator;
 use straico::chat::{Chat, Tool};
 use straico::endpoints::completion::completion_request::CompletionRequest;
-#[allow(unused_imports)]
 use straico::endpoints::completion::completion_response::{
     Choice, Completion, Message, ToolCall, Usage,
 };
@@ -38,10 +36,15 @@ struct OpenAiRequest<'a> {
     max_tokens: Option<u32>,
     /// Controls randomness in the response generation (0.0 to 1.0)
     temperature: Option<f32>,
-    /// Whether to stream the response 
-    stream: Option<bool>,
+    /// Whether to stream the response
+    #[serde(default = "default_streaming")]
+    stream: bool,
     /// List of tools/functions available to the model during completion
     tools: Option<Vec<Tool>>,
+}
+
+fn default_streaming() -> bool {
+    true
 }
 
 impl<'a> From<OpenAiRequest<'a>> for CompletionRequest<'a> {
@@ -191,12 +194,10 @@ where
             //    Some(c) => c.next(),
             //    None => None,
             //},
-            content: self.content.as_mut()
-                .and_then(Iterator::next),
-                //.map(Iterator::next).flatten(),
-            tool_calls: self.tool_calls.as_mut()
-                .and_then(Iterator::next),
-                //.map(Iterator::next).flatten(),
+            content: self.content.as_mut().and_then(Iterator::next),
+            //.map(Iterator::next).flatten(),
+            tool_calls: self.tool_calls.as_mut().and_then(Iterator::next),
+            //.map(Iterator::next).flatten(),
             //tool_calls: match &mut self.tool_calls {
             //    Some(t) => t.next(),
             //    None => None,
@@ -346,7 +347,7 @@ async fn openai_completion<'a>(
         .json(req_inner_oa)
         .send()
         .await
-       .map_err(ErrorInternalServerError)?
+        .map_err(ErrorInternalServerError)?
         .get_completion()
         .map_err(ErrorInternalServerError)?;
 
@@ -357,25 +358,23 @@ async fn openai_completion<'a>(
 
     let parsed_response = response.parse().map_err(ErrorInternalServerError)?;
 
-    match stream {
-        Some(true) | None => {
-            let i = CompletionStream::from(parsed_response);
-            let stream = stream::iter(i).map(|chunk| {
-                let json = serde_json::to_string(&chunk).unwrap();
-                Ok::<_, actix_web::Error>(web::Bytes::from(format!("data: {}\n\n", json)))
-            });
-            let end_stream = stream::once(async {
-                Ok::<_, actix_web::Error>(web::Bytes::from("data: [DONE]\n\n"))
-            });
-            let final_stream = stream.chain(end_stream);
-            Ok(Either::Right(
-                HttpResponseBuilder::new(StatusCode::OK)
-                    .content_type("text/event-stream")
-                    .append_header(("Cache-Control", "no-cache"))
-                    .append_header(("Connection", "keep-alive"))
-                    .streaming(final_stream),
-            ))
-        }
-        _ => Ok(Either::Left(web::Json(parsed_response))),
+    if stream {
+        let i = CompletionStream::from(parsed_response);
+        let stream = stream::iter(i).map(|chunk| {
+            let json = serde_json::to_string(&chunk).unwrap();
+            Ok::<_, actix_web::Error>(web::Bytes::from(format!("data: {}\n\n", json)))
+        });
+        let end_stream =
+            stream::once(async { Ok::<_, actix_web::Error>(web::Bytes::from("data: [DONE]\n\n")) });
+        let final_stream = stream.chain(end_stream);
+        Ok(Either::Right(
+            HttpResponseBuilder::new(StatusCode::OK)
+                .content_type("text/event-stream")
+                .append_header(("Cache-Control", "no-cache"))
+                .append_header(("Connection", "keep-alive"))
+                .streaming(final_stream),
+        ))
+    } else {
+        Ok(Either::Left(web::Json(parsed_response)))
     }
 }

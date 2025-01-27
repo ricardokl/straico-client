@@ -1,4 +1,3 @@
-use anyhow::Result;
 use futures::TryFutureExt;
 use reqwest::{Client, RequestBuilder, Response};
 use serde::{Deserialize, Serialize};
@@ -21,7 +20,7 @@ use crate::endpoints::model::ModelData;
 use crate::endpoints::user::UserData;
 
 #[cfg(feature = "rag")]
-use crate::endpoints::rag::{RagRequest, RagResponse};
+use crate::endpoints::rag::{RagData, RagRequest};
 
 use crate::endpoints::{
     completion::completion_request::CompletionRequest,
@@ -144,9 +143,9 @@ impl StraicoClient {
     }
 
     #[cfg(feature = "rag")]
-    pub fn create_rag(self) -> StraicoRequestBuilder<NoApiKey, RagRequest, RagResponse> {
-            todo!()
-        }
+    pub fn create_rag(self) -> StraicoRequestBuilder<NoApiKey, RagRequest, RagData> {
+        todo!()
+    }
 }
 
 impl<T, U> StraicoRequestBuilder<NoApiKey, T, U> {
@@ -165,7 +164,7 @@ impl<T, U> StraicoRequestBuilder<NoApiKey, T, U> {
 }
 
 #[cfg(feature = "file")]
-type FormResult<T> = Result<StraicoRequestBuilder<T, PayloadSet, FileData>>;
+type FormResult<T> = anyhow::Result<StraicoRequestBuilder<T, PayloadSet, FileData>>;
 #[cfg(feature = "file")]
 impl<T> StraicoRequestBuilder<T, FileRequest, FileData> {
     /// Creates a multipart form request for file upload

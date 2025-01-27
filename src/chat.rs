@@ -124,30 +124,129 @@ impl Default for PromptFormat<'_> {
     ///
     /// A `PromptFormat` instance initialized with default formatting strings for
     /// basic chat interactions.
+    //fn default() -> Self {
+    //    PromptFormat {
+    //        begin: "",
+    //        system_pre: "",
+    //        system_post: "\n",
+    //        user_pre: "### Instruction:\n",
+    //        user_post: "\n",
+    //        assistant_pre: "### Response:\n",
+    //        assistant_post: "\n",
+    //        end: "### Response:\n",
+    //    }
+    //}
     fn default() -> Self {
         PromptFormat {
             begin: "",
-            system_pre: "",
-            system_post: "\n",
-            user_pre: "### Instruction:\n",
-            user_post: "\n",
-            assistant_pre: "### Response:\n",
-            assistant_post: "\n",
-            end: "### Response:\n",
+            system_pre: "<system>",
+            system_post: "</system>",
+            user_pre: "<user>",
+            user_post: "</user>",
+            assistant_pre: "<assistant>",
+            assistant_post: "</assistant>",
+            end: "<assistant>",
         }
     }
 }
+//<｜User｜>
+//<｜Assistant｜>
+//<｜tool▁calls▁begin｜>
+//<｜tool▁call▁begin｜>
+//<｜tool▁sep｜>
+//<｜tool▁call▁end｜>
+//<｜Assistant｜>
+//<｜tool▁calls▁begin｜>
+//<｜tool▁call▁begin｜>
+//<｜tool▁sep｜>
+//<｜tool▁call▁end｜>
+//<｜tool▁call▁begin｜>
+//<｜tool▁sep｜>
+//<｜tool▁call▁end｜>
+//<｜tool▁calls▁end｜>
+//<｜end▁of▁sentence｜>
+//<｜tool▁outputs▁end｜>
+//<｜end▁of▁sentence｜>
+//</think>
+//</think>
+//<｜Assistant｜>
+//<｜end▁of▁sentence｜>
+//<｜tool▁outputs▁begin｜>
+//<｜tool▁output▁begin｜>
+//<｜tool▁output▁end｜>
+//<｜tool▁output▁begin｜>
+//<｜tool▁output▁end｜>
+//<｜tool▁outputs▁end｜>
+//<｜Assistant｜>
+
+//{% set ns = namespace(is_first=false, is_tool=false, is_output_first=true, system_prompt='', is_first_sp=true) %}
+//{{ bos_token }}
+//{{ ns.system_prompt }}
+//{%- for message in messages %}
+//{%- if message['role'] == 'user' %}
+//{%- set ns.is_tool = false -%}
+//{{'<｜User｜>' + message['content']}}
+//{%- endif %}
+//{%- if message['role'] == 'assistant' and 'tool_calls' in message %}
+//{%- set ns.is_tool = false -%}
+//{%- for tool in message['tool_calls'] %}
+//{%- if not ns.is_first %}
+//{%- if message['content'] is none %}
+//{{'<｜Assistant｜><｜tool▁calls▁begin｜><｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '\\n' + '```json' + '\\n' + tool['function']['arguments'] + '\\n' + '```' + '<｜tool▁call▁end｜>'}}
+//{%- else %}
+//{{'<｜Assistant｜>' + message['content'] + '<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '\\n' + '```json' + '\\n' + tool['function']['arguments'] + '\\n' + '```' + '<｜tool▁call▁end｜>'}}
+//{%- endif %}
+//{%- set ns.is_first = true -%}
+//{%- else %}
+//{{'\\n' + '<｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '\\n' + '```json' + '\\n' + tool['function']['arguments'] + '\\n' + '```' + '<｜tool▁call▁end｜>'}}
+//{%- endif %}
+//{%- endfor %}
+//{{'<｜tool▁calls▁end｜><｜end▁of▁sentence｜>'}}
+//{%- endif %}
+//{%- if message['role'] == 'assistant' and 'tool_calls' not in message %}
+//{%- if ns.is_tool %}
+//{{'<｜tool▁outputs▁end｜>' + message['content'] + '<｜end▁of▁sentence｜>'}}
+//{%- set ns.is_tool = false -%}
+//{%- else %}
+//{% set content = message['content'] %}
+//{% if '</think>' in content %}
+//{% set content = content.split('</think>')[-1] %}
+//{% endif %}
+//{{'<｜Assistant｜>' + content + '<｜end▁of▁sentence｜>'}}
+//{%- endif %}
+//{%- endif %}
+//{%- if message['role'] == 'tool' %}
+//{%- set ns.is_tool = true -%}
+//{%- if ns.is_output_first %}
+//{{'<｜tool▁outputs▁begin｜><｜tool▁output▁begin｜>' + message['content'] + '<｜tool▁output▁end｜>'}}
+//{%- set ns.is_output_first = false %}
+//{%- else %}
+//{{'<｜tool▁output▁begin｜>' + message['content'] + '<｜tool▁output▁end｜>'}}
+//{%- endif %}
+//{%- endif %}
+//{%- endfor -%}
+//{% if ns.is_tool %}
+//{{'<｜tool▁outputs▁end｜>'}}
+//{% endif %}
 
 /// Defines the prompt format used by Anthropic's language models like Claude.
 const ANTHROPIC_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "",
-    system_pre: "",
-    system_post: "\n",
-    user_pre: "\nHuman: ",
-    user_post: "\n",
-    assistant_pre: "\nAssistant: ",
-    assistant_post: "\n",
-    end: "\nAssistant:",
+    system_pre: "<system>",
+    system_post: "</system>",
+    user_pre: "<user>",
+    user_post: "</user>",
+    assistant_pre: "<assistant>",
+    assistant_post: "</assistant>",
+    end: "<assistant>",
+    //begin: "",
+    //system_pre: "",
+    //system_post: "\n",
+    //user_pre: "\nHuman: ",
+    //user_post: "\n",
+    //assistant_pre: "\nAssistant: ",
+    //assistant_post: "\n",
+    //end: "\nAssistant:",
 };
 
 /// Defines the prompt format used by Mistral AI's language models.

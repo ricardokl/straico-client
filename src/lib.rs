@@ -7,8 +7,13 @@ pub mod endpoints;
 /// # Variants
 /// * `User` - Endpoint for user information
 /// * `Models` - Endpoint for available models
+#[allow(dead_code)]
 enum GetEndpoint {
+    //#[cfg(feature = "user")]
+    #[allow(dead_code)]
     User,
+    //#[cfg(feature = "model")]
+    #[allow(dead_code)]
     Models,
 }
 
@@ -19,8 +24,12 @@ enum GetEndpoint {
 /// * `Completion` - Endpoint for prompt completion
 /// * `File` - Endpoint for file uploads
 enum PostEndpoint {
+    //#[cfg(feature = "image")]
+    #[allow(dead_code)]
     Image,
     Completion,
+    //#[cfg(feature = "file")]
+    #[allow(dead_code)]
     File,
     #[allow(dead_code)]
     CreateRag,
@@ -49,7 +58,7 @@ impl AsRef<str> for PostEndpoint {
             PostEndpoint::Image => "https://api.straico.com/v0/image/generation",
             PostEndpoint::Completion => "https://api.straico.com/v1/prompt/completion",
             PostEndpoint::File => "https://api.straico.com/v0/file/upload",
-            PostEndpoint::CreateRag =>  "https://api.straico.com/v0/rag"
+            PostEndpoint::CreateRag => "https://api.straico.com/v0/rag",
         }
     }
 }

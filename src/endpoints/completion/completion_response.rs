@@ -1,8 +1,8 @@
-use std::fmt;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::fmt;
 
 /// Represents a collection of completion data with associated pricing and word count statistics.
 ///
@@ -178,7 +178,7 @@ pub enum Content {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum TextObject {
-    Text { text: Box<str> }
+    Text { text: Box<str> },
 }
 
 impl From<Content> for String {
@@ -202,9 +202,11 @@ impl Content {
     pub fn is_empty(&self) -> bool {
         match self {
             Content::Text(text) => text.is_empty(),
-            Content::TextArray(text_array) => text_array.iter().all(|text_object| match text_object {
-                TextObject::Text { text } => text.is_empty(),
-            }),
+            Content::TextArray(text_array) => {
+                text_array.iter().all(|text_object| match text_object {
+                    TextObject::Text { text } => text.is_empty(),
+                })
+            }
         }
     }
 
@@ -214,7 +216,7 @@ impl Content {
             Content::TextArray(text_array) => {
                 let mut result = String::new();
                 for text_object in text_array {
-                    let TextObject::Text { text } = text_object; 
+                    let TextObject::Text { text } = text_object;
                     result.push_str(text);
                     result.push('\n');
                 }
@@ -229,8 +231,8 @@ impl Content {
             Content::TextArray(text_array) => {
                 let mut result = String::new();
                 for text_object in text_array {
-                    let TextObject::Text { text } = text_object; 
-                    result.push_str(text); 
+                    let TextObject::Text { text } = text_object;
+                    result.push_str(text);
                     result.push('\n');
                 }
                 result.replace(pattern, replacement)
@@ -301,7 +303,7 @@ impl CompletionData {
     ///
     /// # Returns
     /// The `Completion` object from the first entry in the completions map.
-    pub fn get_completion(self) -> Completion {
+    pub fn get_completion_data(self) -> Completion {
         let values = self.completions.into_values();
         values.map(|x| x.completion).next().unwrap()
     }

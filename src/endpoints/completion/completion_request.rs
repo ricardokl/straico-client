@@ -374,7 +374,8 @@ impl<'a, T, K> CompletionRequestBuilder<'a, T, K> {
     /// # Returns
     /// The builder with max_tokens set
     pub fn max_tokens(mut self, max_tokens: u32) -> CompletionRequestBuilder<'a, T, K> {
-        self.max_tokens = Some(max_tokens);
+        let _ = self.max_tokens.insert(max_tokens);
+        //self.max_tokens = Some(max_tokens);
         self
     }
 }
