@@ -264,6 +264,7 @@ impl fmt::Display for Content {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ToolCall {
+    // For assistant messages that make tool calls
     /// A function call with a unique identifier and function parameters
     Function { id: String, function: FunctionData },
 }
