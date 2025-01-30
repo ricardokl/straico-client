@@ -179,78 +179,60 @@ impl Default for PromptFormat<'_> {
 //<｜tool▁outputs▁end｜>
 //<｜Assistant｜>
 
-//{% set ns = namespace(is_first=false, is_tool=false, is_output_first=true, system_prompt='', is_first_sp=true) %}
-//{{ bos_token }}
-//{{ ns.system_prompt }}
-//{%- for message in messages %}
-//{%- if message['role'] == 'user' %}
-//{%- set ns.is_tool = false -%}
-//{{'<｜User｜>' + message['content']}}
-//{%- endif %}
-//{%- if message['role'] == 'assistant' and 'tool_calls' in message %}
-//{%- set ns.is_tool = false -%}
-//{%- for tool in message['tool_calls'] %}
-//{%- if not ns.is_first %}
-//{%- if message['content'] is none %}
-//{{'<｜Assistant｜><｜tool▁calls▁begin｜><｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '\\n' + '```json' + '\\n' + tool['function']['arguments'] + '\\n' + '```' + '<｜tool▁call▁end｜>'}}
-//{%- else %}
-//{{'<｜Assistant｜>' + message['content'] + '<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '\\n' + '```json' + '\\n' + tool['function']['arguments'] + '\\n' + '```' + '<｜tool▁call▁end｜>'}}
-//{%- endif %}
-//{%- set ns.is_first = true -%}
-//{%- else %}
-//{{'\\n' + '<｜tool▁call▁begin｜>' + tool['type'] + '<｜tool▁sep｜>' + tool['function']['name'] + '\\n' + '```json' + '\\n' + tool['function']['arguments'] + '\\n' + '```' + '<｜tool▁call▁end｜>'}}
-//{%- endif %}
-//{%- endfor %}
-//{{'<｜tool▁calls▁end｜><｜end▁of▁sentence｜>'}}
-//{%- endif %}
-//{%- if message['role'] == 'assistant' and 'tool_calls' not in message %}
-//{%- if ns.is_tool %}
-//{{'<｜tool▁outputs▁end｜>' + message['content'] + '<｜end▁of▁sentence｜>'}}
-//{%- set ns.is_tool = false -%}
-//{%- else %}
-//{% set content = message['content'] %}
-//{% if '</think>' in content %}
-//{% set content = content.split('</think>')[-1] %}
-//{% endif %}
-//{{'<｜Assistant｜>' + content + '<｜end▁of▁sentence｜>'}}
-//{%- endif %}
-//{%- endif %}
-//{%- if message['role'] == 'tool' %}
-//{%- set ns.is_tool = true -%}
-//{%- if ns.is_output_first %}
-//{{'<｜tool▁outputs▁begin｜><｜tool▁output▁begin｜>' + message['content'] + '<｜tool▁output▁end｜>'}}
-//{%- set ns.is_output_first = false %}
-//{%- else %}
-//{{'<｜tool▁output▁begin｜>' + message['content'] + '<｜tool▁output▁end｜>'}}
-//{%- endif %}
-//{%- endif %}
-//{%- endfor -%}
-//{% if ns.is_tool %}
-//{{'<｜tool▁outputs▁end｜>'}}
-//{% endif %}
+/// Defines the prompt format used by DeepSeek language models.
+pub const DEEPSEEK_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+    begin: "<|begin_of_sentence|>",
+    system_pre: "",
+    system_post: "",
+    user_pre: "<|User|>",
+    user_post: "",
+    assistant_pre: "<|Assistant|>",
+    assistant_post: "<|end_of_sentence|>",
+    end: "<|Assistant|>",
+    tool_calls: ToolCallsFormat {
+        tool_calls_begin: "<|tool_calls_begin|>",
+        tool_call_begin: "<|tool_call_begin|>",
+        tool_sep: "<|tool_sep|>",
+        tool_call_end: "<|tool_call_end|>",
+        tool_calls_end: "<|tool_calls_end|>",
+    },
+    tool_output: ToolOutputFormat {
+        tool_outputs_begin: "<|tool_outputs_begin|>",
+        tool_output_begin: "<|tool_output_begin|>",
+        tool_output_end: "<|tool_output_end|>",
+        tool_outputs_end: "<|tool_outputs_end|>",
+        end: "",
+    },
+};
 
 /// Defines the prompt format used by Anthropic's language models like Claude.
-const ANTHROPIC_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+pub const ANTHROPIC_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "",
-    system_pre: "<system>",
-    system_post: "</system>",
-    user_pre: "<user>",
-    user_post: "</user>",
-    assistant_pre: "<assistant>",
-    assistant_post: "</assistant>",
-    end: "<assistant>",
-    //begin: "",
-    //system_pre: "",
-    //system_post: "\n",
-    //user_pre: "\nHuman: ",
-    //user_post: "\n",
-    //assistant_pre: "\nAssistant: ",
-    //assistant_post: "\n",
-    //end: "\nAssistant:",
+    system_pre: "",
+    system_post: "\n",
+    user_pre: "\nHuman: ",
+    user_post: "\n",
+    assistant_pre: "\nAssistant: ",
+    assistant_post: "\n",
+    end: "\nAssistant:",
+    tool_output: ToolOutputFormat {
+        tool_outputs_begin: "<user>",
+        tool_output_begin: "<tool_response>",
+        tool_output_end: "</tool_response>",
+        tool_outputs_end: "</user>",
+        end: "",
+    },
+    tool_calls: ToolCallsFormat {
+        tool_calls_begin: "<tool_calls>",
+        tool_call_begin: "<tool_call>",
+        tool_sep: ",",
+        tool_call_end: "</tool_call>",
+        tool_calls_end: "</tool_calls>",
+    },
 };
 
 /// Defines the prompt format used by Mistral AI's language models.
-const MISTRAL_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+pub const MISTRAL_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "",
     system_pre: "[INST] <<SYS>>",
     system_post: "<</SYS>> [/INST]",
@@ -259,10 +241,11 @@ const MISTRAL_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     assistant_pre: "",
     assistant_post: "",
     end: "",
+    ..ANTHROPIC_PROMPT_FORMAT
 };
 
 /// Defines the prompt format used by LLaMA 3 language models.
-const LLAMA3_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+pub const LLAMA3_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "<|begin_of_text|>",
     system_pre: "<|start_header_id|>system<|end_header_id|>\n\n",
     system_post: "<|eot_id|>",
@@ -271,10 +254,11 @@ const LLAMA3_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     assistant_pre: "<|start_header_id|>assistant<|end_header_id|>\n\n",
     assistant_post: "<|eot_id|>",
     end: "<|start_header_id|>assistant<|end_header_id|>\n\n",
+    ..ANTHROPIC_PROMPT_FORMAT
 };
 
 /// Defines the prompt format used by Command-R language models.
-const COMMAND_R_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+pub const COMMAND_R_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "",
     system_pre: "<|START_OF_TURN_TOKEN|><|SYSTEM_TOKEN|>",
     system_post: "<|END_OF_TURN_TOKEN|>",
@@ -283,10 +267,11 @@ const COMMAND_R_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     assistant_pre: "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>",
     assistant_post: "<|END_OF_TURN_TOKEN|>",
     end: "<|START_OF_TURN_TOKEN|><|CHATBOT_TOKEN|>",
+    ..ANTHROPIC_PROMPT_FORMAT
 };
 
 /// Defines the prompt format used by Qwen language models.
-const QWEN_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
+pub const QWEN_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     begin: "",
     system_pre: "<|im_start|>system\n",
     system_post: "<|im_end|>",
@@ -295,6 +280,7 @@ const QWEN_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
     assistant_pre: "<|im_start|>assistant\n",
     assistant_post: "<|im_end|>",
     end: "<|im_start|>assistant\n",
+    ..ANTHROPIC_PROMPT_FORMAT
 };
 
 impl Chat {
@@ -323,6 +309,8 @@ impl Chat {
             QWEN_PROMPT_FORMAT
         } else if model.to_lowercase().contains("anthropic") {
             ANTHROPIC_PROMPT_FORMAT
+        } else if model.to_lowercase().contains("deepseek") {
+            DEEPSEEK_PROMPT_FORMAT
         } else {
             PromptFormat::default()
         };
@@ -335,13 +323,15 @@ You may call one or more functions to assist with the user query
 You are provided with available function signatures within <tools></tools> XML tags:
 <tools>
 "###;
-        let post_tools: &str = r###"
-</tools>
-# Tool Calls
+        //        let post_tools: &str = r###"
+        //</tools>
+        //# Tool Calls
+        //
+        //For each tool call, return a json object with function name and arguments within \<tool_call\>\</tool_call\> XML tags:"
+        //\<tool_call\>{"name": <function-name>, "arguments": <args-json-object>}\</tool_call\>
+        //"###;
 
-For each tool call, return a json object with function name and arguments within \<tool_call\>\</tool_call\> XML tags:"
-\<tool_call\>{"name": <function-name>, "arguments": <args-json-object>}\</tool_call\>
-"###;
+        let post_tools: &str = &format!("\n </tools>\n # Tool Calls\n \nStart with the opening tag {}. For each tool call, return a json object with function name and arguments within {}{} tags:\n{}{{\"name\": <function-name>{} \"arguments\": <args-json-object>}}{}. close the tool calls section with {}\n", format.tool_calls.tool_calls_begin, format.tool_calls.tool_call_begin, format.tool_calls.tool_call_end, format.tool_calls.tool_call_begin, format.tool_calls.tool_sep, format.tool_calls.tool_call_end, format.tool_calls.tool_calls_end);
 
         let mut tools_message = String::new();
         if let Some(tools) = &tools {
@@ -389,13 +379,17 @@ For each tool call, return a json object with function name and arguments within
                     match (content, tool_calls) {
                         (Some(c), None) => output.push_str(&c.to_string()),
                         (None, Some(t)) => {
+                            output.push_str(format.tool_calls.tool_calls_begin);
                             for tool_call in t {
                                 let ToolCall::Function { function, .. } = tool_call;
                                 output.push_str(&format!(
-                                    "<tool_call>\n{}\n</tool_call>",
-                                    serde_json::to_string(function).unwrap()
+                                    "{}\n{}\n{}",
+                                    format.tool_calls.tool_call_begin,
+                                    serde_json::to_string(function).unwrap(),
+                                    format.tool_calls.tool_call_end
                                 ));
                             }
+                            output.push_str(format.tool_calls.tool_calls_end);
                         }
                         // Maybe this is unreachable? Depends on the provider never answering like this.
                         (Some(c), Some(t)) => {
@@ -415,18 +409,19 @@ For each tool call, return a json object with function name and arguments within
                 (_, Message::Tool { content, .. }) if i > 0 => {
                     // Check if previous message was not a tool
                     if !matches!(self.0.get(i - 1), Some(Message::Tool { .. })) {
-                        output.push_str(format.user_pre);
+                        output.push_str(format.tool_output.tool_outputs_begin);
                     }
 
-                    output.push_str("\n<tool_response>\n");
+                    output.push_str(format.tool_output.tool_output_begin);
                     output.push_str(&content.to_string());
-                    output.push_str("\n</tool_response>");
+                    output.push_str(format.tool_output.tool_output_end);
 
                     // Check if next message is not a tool
                     if i == self.0.len() - 1
                         || !matches!(self.0.get(i + 1), Some(Message::Tool { .. }))
                     {
-                        output.push_str(format.user_post);
+                        output.push_str(format.tool_output.tool_outputs_end);
+                        output.push_str(format.tool_output.end);
                     }
                 }
                 (_, _) => {
@@ -437,7 +432,7 @@ For each tool call, return a json object with function name and arguments within
                 }
             }
         }
-        output.push_str(format.end);
+        //output.push_str(format.end);
         Prompt::from(Cow::Owned(output))
     }
 }
