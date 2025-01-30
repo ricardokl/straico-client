@@ -1,3 +1,7 @@
+use crate::chat::{
+    PromptFormat, ANTHROPIC_PROMPT_FORMAT, COMMAND_R_PROMPT_FORMAT, DEEPSEEK_PROMPT_FORMAT,
+    LLAMA3_PROMPT_FORMAT, MISTRAL_PROMPT_FORMAT, QWEN_PROMPT_FORMAT,
+};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -323,7 +327,7 @@ impl Completion {
     /// Returns the processed completion wrapped in a Result
     pub fn parse(mut self) -> Result<Completion> {
         for x in self.choices.iter_mut() {
-            x.message.tool_calls_response()?;
+            x.message.tool_calls_response(&self.model)?;
             if let Message::Assistant { content, .. } = &x.message {
                 if content.is_none() {
                     x.finish_reason = "tool_calls".into();
@@ -351,20 +355,55 @@ impl Message {
     /// # Returns
     /// - `Ok(())` if processing succeeds or if no tool calls are found
     /// - `Err` if JSON parsing fails
-    fn tool_calls_response(&mut self) -> Result<()> {
+    fn tool_calls_response(&mut self, model: &str) -> Result<()> {
+        // Get the appropriate prompt format based on the model
+        let format = if model.to_lowercase().contains("anthropic") {
+            ANTHROPIC_PROMPT_FORMAT
+        } else if model.to_lowercase().contains("mistral") {
+            MISTRAL_PROMPT_FORMAT
+        } else if model.to_lowercase().contains("llama3") {
+            LLAMA3_PROMPT_FORMAT
+        } else if model.to_lowercase().contains("command") {
+            COMMAND_R_PROMPT_FORMAT
+        } else if model.to_lowercase().contains("qwen") {
+            QWEN_PROMPT_FORMAT
+        } else if model.to_lowercase().contains("deepseek") {
+            DEEPSEEK_PROMPT_FORMAT
+        } else {
+            PromptFormat::default()
+        };
+
         if let Message::Assistant {
             content,
             tool_calls,
         } = self
         {
             if let Some(optional_content) = content {
-                if optional_content.find("<tool_call>").is_some()
-                    || optional_content.find("</tool_call>").is_some()
+                if optional_content
+                    .find(&format.tool_calls.tool_call_begin)
+                    .is_some()
+                    || optional_content
+                        .find(&format.tool_calls.tool_call_end)
+                        .is_some()
                 {
-                    let re = regex::Regex::new(r"<tool_call>(.*?)</tool_call>").unwrap();
+                    let pattern: &str = &format!(
+                        r"{}(.*?){}",
+                        regex::escape(&format.tool_calls.tool_call_begin),
+                        regex::escape(&format.tool_calls.tool_call_end)
+                    );
+                    let re = regex::Regex::new(pattern)?;
                     let items = re
-                        .captures_iter(&optional_content.replace("\n", ""))
-                        .map(|cap| cap.get(1).unwrap().as_str().trim())
+                        //.captures_iter(&optional_content.replace("\n", ""))
+                        // Extract couldn't understand that there is only one match
+                        // Extract return the match, and the capture group, which has only one element
+                        //.map(|cap| cap.extract::<1>().1[0].trim())
+                        // Longer but more readable:
+                        .find_iter(&optional_content.replace("\n", ""))
+                        .map(|c| {
+                            c.as_str()
+                                .trim_start_matches(&format.tool_calls.tool_call_begin)
+                                .trim_end_matches(&format.tool_calls.tool_call_end)
+                        })
                         .map(|s| {
                             serde_json::from_str::<FunctionData>(s).map(|function_data| {
                                 ToolCall::Function {
@@ -382,18 +421,4 @@ impl Message {
         }
         Ok(())
     }
-
-    //pub fn new_assistant_content(content: String) -> Self {
-    //    Message::Assistant {
-    //        content: Some(content.into()),
-    //        tool_calls: None,
-    //    }
-    //}
-    //
-    //pub fn new_assistant_tool_calls(tool_calls: Vec<ToolCall>) -> Self {
-    //    Message::Assistant {
-    //        content: None,
-    //        tool_calls: Some(tool_calls),
-    //    }
-    //}
 }
