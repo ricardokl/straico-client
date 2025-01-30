@@ -76,7 +76,7 @@ pub enum Tool {
 /// * `assistant_pre` - Text to insert before assistant responses
 /// * `assistant_post` - Text to insert after assistant responses
 /// * `end` - Text to append at the very end of the prompt
-struct PromptFormat<'a> {
+pub struct PromptFormat<'a> {
     /// Text to insert at the very beginning of the prompt
     begin: &'a str,
     /// Text to insert before system messages
@@ -93,6 +93,53 @@ struct PromptFormat<'a> {
     assistant_post: &'a str,
     /// Text to append at the very end of the prompt
     end: &'a str,
+    pub tool_calls: ToolCallsFormat<'a>,
+    pub tool_output: ToolOutputFormat<'a>,
+}
+
+pub struct ToolCallsFormat<'a> {
+    pub tool_calls_begin: &'a str,
+    pub tool_call_begin: &'a str,
+    pub tool_sep: &'a str,
+    pub tool_call_end: &'a str,
+    pub tool_calls_end: &'a str,
+}
+
+pub struct ToolOutputFormat<'a> {
+    pub tool_outputs_begin: &'a str,
+    pub tool_output_begin: &'a str,
+    pub tool_output_end: &'a str,
+    pub tool_outputs_end: &'a str,
+    pub end: &'a str,
+}
+
+impl Default for ToolCallsFormat<'_> {
+    fn default() -> Self {
+        ToolCallsFormat {
+            tool_calls_begin: "<tool_calls>",
+            tool_call_begin: "<tool_call>",
+            tool_sep: ",",
+            tool_call_end: "</tool_call>",
+            tool_calls_end: "</tool_calls>",
+        }
+    }
+}
+
+impl Default for ToolOutputFormat<'_> {
+    fn default() -> Self {
+        ToolOutputFormat {
+            //tool_outputs_begin: "<tool_responses>",
+            // If the model doesn't have a specific tag for tool responses,
+            // we have to place it inside a user message, since the user is
+            // giving the output back
+            tool_outputs_begin: "<user>",
+            tool_output_begin: "<tool_response>",
+            tool_output_end: "</tool_response>",
+            tool_outputs_end: "</user>",
+            //tool_outputs_end: "<tool_responses>",
+            end: "",
+        }
+    }
 }
 
 impl Default for PromptFormat<'_> {
@@ -107,18 +154,6 @@ impl Default for PromptFormat<'_> {
     ///
     /// A `PromptFormat` instance initialized with default formatting strings for
     /// basic chat interactions.
-    //fn default() -> Self {
-    //    PromptFormat {
-    //        begin: "",
-    //        system_pre: "",
-    //        system_post: "\n",
-    //        user_pre: "### Instruction:\n",
-    //        user_post: "\n",
-    //        assistant_pre: "### Response:\n",
-    //        assistant_post: "\n",
-    //        end: "### Response:\n",
-    //    }
-    //}
     fn default() -> Self {
         PromptFormat {
             begin: "",
@@ -129,38 +164,21 @@ impl Default for PromptFormat<'_> {
             assistant_pre: "<assistant>",
             assistant_post: "</assistant>",
             end: "<assistant>",
+            tool_calls: ToolCallsFormat::default(),
+            tool_output: ToolOutputFormat::default(),
+            //    PromptFormat {
+            //        begin: "",
+            //        system_pre: "",
+            //        system_post: "\n",
+            //        user_pre: "### Instruction:\n",
+            //        user_post: "\n",
+            //        assistant_pre: "### Response:\n",
+            //        assistant_post: "\n",
+            //        end: "### Response:\n",
+            //    }
         }
     }
 }
-//<｜User｜>
-//<｜Assistant｜>
-//<｜tool▁calls▁begin｜>
-//<｜tool▁call▁begin｜>
-//<｜tool▁sep｜>
-//<｜tool▁call▁end｜>
-//<｜Assistant｜>
-//<｜tool▁calls▁begin｜>
-//<｜tool▁call▁begin｜>
-//<｜tool▁sep｜>
-//<｜tool▁call▁end｜>
-//<｜tool▁call▁begin｜>
-//<｜tool▁sep｜>
-//<｜tool▁call▁end｜>
-//<｜tool▁calls▁end｜>
-//<｜end▁of▁sentence｜>
-//<｜tool▁outputs▁end｜>
-//<｜end▁of▁sentence｜>
-//</think>
-//</think>
-//<｜Assistant｜>
-//<｜end▁of▁sentence｜>
-//<｜tool▁outputs▁begin｜>
-//<｜tool▁output▁begin｜>
-//<｜tool▁output▁end｜>
-//<｜tool▁output▁begin｜>
-//<｜tool▁output▁end｜>
-//<｜tool▁outputs▁end｜>
-//<｜Assistant｜>
 
 /// Defines the prompt format used by DeepSeek language models.
 pub const DEEPSEEK_PROMPT_FORMAT: PromptFormat<'_> = PromptFormat {
