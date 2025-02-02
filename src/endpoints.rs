@@ -72,6 +72,9 @@ pub enum ResponseType {
     #[cfg(feature = "rag")]
     #[serde(skip_serializing)]
     Rag(rag::RagData),
+    #[cfg(feature = "rag")]
+    #[serde(skip_serializing)]
+    RagCompletion(rag::RagPromptCompletionData),
 }
 
 impl ApiResponseData {
