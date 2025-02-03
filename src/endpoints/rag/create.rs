@@ -112,7 +112,7 @@ mod test {
             "__v": 0
         }
         "#;
-        let result: RagData = serde_json::from_str(json).unwrap();
+        let result: RagData = serde_json::from_str(json).expect("Deserialization failed");
         assert_eq!(result.user_id, "64ada93f22131d3f5".into());
         assert_eq!(result.name, "Rag de prueba txt".into());
         assert_eq!(result.rag_url, "https://example.com".into());
