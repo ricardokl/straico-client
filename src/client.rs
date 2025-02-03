@@ -20,7 +20,7 @@ use crate::endpoints::model::ModelData;
 use crate::endpoints::user::UserData;
 
 #[cfg(feature = "rag")]
-use crate::endpoints::rag::{RagData, RagRequest};
+use crate::endpoints::rag::create::{RagData, RagRequest};
 
 use crate::endpoints::{
     completion::completion_request::CompletionRequest,
