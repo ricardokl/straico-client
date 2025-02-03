@@ -71,7 +71,7 @@ pub enum ResponseType {
     User(user::UserData),
     #[cfg(feature = "rag")]
     #[serde(skip_serializing)]
-    Rag(rag::create::RagData),
+    RagCreate(rag::create::RagData),
     #[cfg(feature = "rag")]
     #[serde(skip_serializing)]
     RagCompletion(rag::completion::RagPromptCompletionData),
