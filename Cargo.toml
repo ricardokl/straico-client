@@ -11,8 +11,9 @@ model = []
 image = []
 file = []
 rag = []
-# default = ["user", "model", "image", "file", "rag"]
-default = []
+agent = []
+default = ["user", "model", "image", "file", "rag"]
+# default = []
 
 [lib]
 name = "straico"
