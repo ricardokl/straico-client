@@ -1,4 +1,4 @@
-#[cg(feature = "agent")]
+#[cfg(feature = "agent")]
 pub mod agent;
 pub mod completion;
 #[cfg(feature = "file")]
