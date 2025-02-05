@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SearchType {
     Similarity,
@@ -8,7 +8,7 @@ pub enum SearchType {
     SimilarityScoreThreshold,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct AgentCompletionRequest<'a> {
     pub prompt: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -23,7 +23,7 @@ pub struct AgentCompletionRequest<'a> {
     pub score_threshold: Option<f32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct AgentCompletionResponse {
     pub answer: Box<String>,
     pub references: Vec<Reference>,

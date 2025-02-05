@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct RagToAgentRequest<'a> {
     pub rag: &'a str,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct RagToAgentResponse {
     pub uuidv4: Box<String>,
