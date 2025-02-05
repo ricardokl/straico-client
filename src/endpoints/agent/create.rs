@@ -9,6 +9,117 @@ pub struct AgentCreateRequest<'a> {
     tags: Vec<&'a str>,
 }
 
+#[derive(Default)]
+pub struct NotSet;
+pub struct Set<T>(T);
+
+#[derive(Default)]
+pub struct AgentCreateRequestBuilder<T = NotSet, V = NotSet, U = NotSet, R = NotSet, S = NotSet> {
+    name: T,
+    custom_prompt: V,
+    default_llm: U,
+    description: R,
+    tags: S,
+}
+
+impl<'a> AgentCreateRequest<'a> {
+    pub fn new() -> AgentCreateRequestBuilder<NotSet, NotSet, NotSet, NotSet, NotSet> {
+        AgentCreateRequestBuilder::default()
+    }
+}
+
+impl<T, U, V, R> AgentCreateRequestBuilder<NotSet, T, U, V, R> {
+    pub fn name<'a>(self, name: &'a str) -> AgentCreateRequestBuilder<Set<&'a str>, T, U, V, R> {
+        AgentCreateRequestBuilder {
+            name: Set(name),
+            custom_prompt: self.custom_prompt,
+            default_llm: self.default_llm,
+            description: self.description,
+            tags: self.tags,
+        }
+    }
+}
+
+impl<T, U, V, R> AgentCreateRequestBuilder<T, NotSet, U, V, R> {
+    pub fn custom_prompt<'a>(
+        self,
+        custom_prompt: &'a str,
+    ) -> AgentCreateRequestBuilder<T, Set<&'a str>, U, V, R> {
+        AgentCreateRequestBuilder {
+            name: self.name,
+            custom_prompt: Set(custom_prompt),
+            default_llm: self.default_llm,
+            description: self.description,
+            tags: self.tags,
+        }
+    }
+}
+
+impl<T, U, V, R> AgentCreateRequestBuilder<T, U, NotSet, V, R> {
+    pub fn default_llm<'a>(
+        self,
+        default_llm: &'a str,
+    ) -> AgentCreateRequestBuilder<T, U, Set<&'a str>, V, R> {
+        AgentCreateRequestBuilder {
+            name: self.name,
+            custom_prompt: self.custom_prompt,
+            default_llm: Set(default_llm),
+            description: self.description,
+            tags: self.tags,
+        }
+    }
+}
+
+impl<T, U, V, R> AgentCreateRequestBuilder<T, U, V, NotSet, R> {
+    pub fn description<'a>(
+        self,
+        description: &'a str,
+    ) -> AgentCreateRequestBuilder<T, U, V, Set<&'a str>, R> {
+        AgentCreateRequestBuilder {
+            name: self.name,
+            custom_prompt: self.custom_prompt,
+            default_llm: self.default_llm,
+            description: Set(description),
+            tags: self.tags,
+        }
+    }
+}
+
+impl<T, U, V, R> AgentCreateRequestBuilder<T, U, V, R, NotSet> {
+    pub fn tags<'a>(
+        self,
+        tags: Vec<&'a str>,
+    ) -> AgentCreateRequestBuilder<T, U, V, R, Set<Vec<&'a str>>> {
+        AgentCreateRequestBuilder {
+            name: self.name,
+            custom_prompt: self.custom_prompt,
+            default_llm: self.default_llm,
+            description: self.description,
+            tags: Set(tags),
+        }
+    }
+}
+
+impl<'a>
+    AgentCreateRequestBuilder<
+        Set<&'a str>,
+        Set<&'a str>,
+        Set<&'a str>,
+        Set<&'a str>,
+        Set<Vec<&'a str>>,
+    >
+{
+    pub fn build(self) -> AgentCreateRequest<'a> {
+        AgentCreateRequest {
+            name: (self.name).0,
+            custom_prompt: (self.custom_prompt).0,
+            default_llm: (self.default_llm).0,
+            description: (self.description).0,
+            tags: (self.tags).0,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct AgentCreateResponse {
     uuidv4: Box<String>,
