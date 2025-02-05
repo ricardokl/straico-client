@@ -5,24 +5,24 @@ use serde::Deserialize;
 #[serde(rename_all = "snake_case")]
 pub struct AgentDetails {
     #[serde(rename = "_id")]
-    pub id: Box<String>,
-    pub uuidv4: Box<String>,
-    pub default_llm: Box<String>,
-    pub custom_prompt: Box<String>,
-    pub name: Box<String>,
-    pub description: Box<String>,
-    pub status: Box<String>,
-    pub tags: Vec<Box<String>>,
-    pub last_interaction: Option<Box<String>>,
-    pub interaction_count: u32,
-    pub visibility: Box<String>,
+    id: Box<String>,
+    uuidv4: Box<String>,
+    default_llm: Box<String>,
+    custom_prompt: Box<String>,
+    name: Box<String>,
+    description: Box<String>,
+    status: Box<String>,
+    tags: Vec<Box<String>>,
+    last_interaction: Option<Box<String>>,
+    interaction_count: u32,
+    visibility: Box<String>,
     #[serde(rename = "createdAt")]
-    pub created_at: Box<String>,
+    created_at: Box<String>,
     #[serde(rename = "updatedAt")]
-    pub updated_at: Box<String>,
+    updated_at: Box<String>,
     #[serde(rename = "__v")]
-    pub version: i32,
-    pub rag_association: Box<String>,
+    version: i32,
+    rag_association: Box<String>,
 }
 
 #[cfg(test)]

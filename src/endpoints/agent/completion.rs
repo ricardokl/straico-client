@@ -10,31 +10,31 @@ pub enum SearchType {
 
 #[derive(Debug, Serialize)]
 pub struct AgentCompletionRequest<'a> {
-    pub prompt: &'a str,
+    prompt: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub search_type: Option<SearchType>,
+    search_type: Option<SearchType>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub k: Option<u32>,
+    k: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub fetch_k: Option<u32>,
+    fetch_k: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub lambda_mult: Option<f32>,
+    lambda_mult: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub score_threshold: Option<f32>,
+    score_threshold: Option<f32>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct AgentCompletionResponse {
-    pub answer: Box<String>,
-    pub references: Vec<Reference>,
-    pub file_name: Box<String>,
-    pub coins_used: f32,
+    answer: Box<String>,
+    references: Vec<Reference>,
+    file_name: Box<String>,
+    coins_used: f32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Reference {
-    pub page_content: Box<String>,
-    pub page: u32,
+    page_content: Box<String>,
+    page: u32,
 }
 #[cfg(test)]
 mod tests {
