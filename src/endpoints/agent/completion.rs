@@ -36,6 +36,76 @@ pub struct Reference {
     page_content: Box<String>,
     page: u32,
 }
+
+#[derive(Default)]
+pub struct AgentCompletionRequestBuilder<PromptState = NotSet> {
+    prompt: PromptState,
+    search_type: Option<SearchType>,
+    k: Option<u32>,
+    fetch_k: Option<u32>,
+    lambda_mult: Option<f32>,
+    score_threshold: Option<f32>,
+}
+
+#[derive(Default)]
+pub struct NotSet;
+pub struct Set<'a>(&'a str);
+
+impl AgentCompletionRequest<'_> {
+    pub fn new() -> AgentCompletionRequestBuilder {
+        AgentCompletionRequestBuilder::default()
+    }
+}
+
+impl AgentCompletionRequestBuilder<NotSet> {
+    pub fn prompt<'a>(self, prompt: &'a str) -> AgentCompletionRequestBuilder<Set<'a>> {
+        AgentCompletionRequestBuilder {
+            prompt: Set(prompt),
+            search_type: self.search_type,
+            k: self.k,
+            fetch_k: self.fetch_k,
+            lambda_mult: self.lambda_mult,
+            score_threshold: self.score_threshold,
+        }
+    }
+}
+
+impl<T> AgentCompletionRequestBuilder<T> {
+    pub fn search_type(mut self, search_type: SearchType) -> Self {
+        self.search_type = Some(search_type);
+        self
+    }
+    pub fn k(mut self, k: u32) -> Self {
+        self.k = Some(k);
+        self
+    }
+    pub fn fetch_k(mut self, fetch_k: u32) -> Self {
+        self.fetch_k = Some(fetch_k);
+        self
+    }
+    pub fn lambda_mult(mut self, lambda_mult: f32) -> Self {
+        self.lambda_mult = Some(lambda_mult);
+        self
+    }
+    pub fn score_threshold(mut self, score_threshold: f32) -> Self {
+        self.score_threshold = Some(score_threshold);
+        self
+    }
+}
+
+impl<'a> AgentCompletionRequestBuilder<Set<'a>> {
+    pub fn build(self) -> AgentCompletionRequest<'a> {
+        AgentCompletionRequest {
+            prompt: self.prompt.0,
+            search_type: self.search_type,
+            k: self.k,
+            fetch_k: self.fetch_k,
+            lambda_mult: self.lambda_mult,
+            score_threshold: self.score_threshold,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
