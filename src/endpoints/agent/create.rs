@@ -22,8 +22,8 @@ pub struct AgentCreateRequestBuilder<T = NotSet, V = NotSet, U = NotSet, R = Not
     tags: S,
 }
 
-impl<'a> AgentCreateRequest<'a> {
-    pub fn new() -> AgentCreateRequestBuilder<NotSet, NotSet, NotSet, NotSet, NotSet> {
+impl AgentCreateRequest<'_> {
+    pub fn new() -> AgentCreateRequestBuilder {
         AgentCreateRequestBuilder::default()
     }
 }

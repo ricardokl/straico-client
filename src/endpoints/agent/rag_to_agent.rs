@@ -5,6 +5,33 @@ pub struct RagToAgentRequest<'a> {
     rag: &'a str,
 }
 
+#[derive(Default)]
+pub struct RagToAgentRequestBuilder<T = NotSet> {
+    rag: T,
+}
+
+impl RagToAgentRequest<'_> {
+    pub fn new() -> RagToAgentRequestBuilder {
+        RagToAgentRequestBuilder::default()
+    }
+}
+
+impl<NotSet> RagToAgentRequestBuilder<NotSet> {
+    pub fn rag<'a>(self, rag: &'a str) -> RagToAgentRequestBuilder<Set<&'a str>> {
+        RagToAgentRequestBuilder { rag: Set(rag) }
+    }
+}
+
+impl<'a> RagToAgentRequestBuilder<Set<&'a str>> {
+    pub fn build(self) -> RagToAgentRequest<'a> {
+        RagToAgentRequest { rag: self.rag.0 }
+    }
+}
+
+#[derive(Default)]
+struct NotSet;
+pub struct Set<T>(T);
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct RagToAgentResponse {
