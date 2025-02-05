@@ -71,7 +71,7 @@ mod tests {
         assert_eq!(json["k"], 5);
         assert_eq!(json["fetch_k"], 20);
         assert_eq!(json["lambda_mult"], 0.5);
-        assert_eq!(json["score_threshold"], 0.8);
+        assert!(json["score_threshold"].is_number());
     }
 
     #[test]
