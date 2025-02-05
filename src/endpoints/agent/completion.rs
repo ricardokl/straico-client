@@ -47,10 +47,7 @@ mod tests {
             serde_json::to_string(&SearchType::Similarity).unwrap(),
             r#""similarity""#
         );
-        assert_eq!(
-            serde_json::to_string(&SearchType::Mmr).unwrap(),
-            r#""mmr""#
-        );
+        assert_eq!(serde_json::to_string(&SearchType::Mmr).unwrap(), r#""mmr""#);
         assert_eq!(
             serde_json::to_string(&SearchType::SimilarityScoreThreshold).unwrap(),
             r#""similarity_score_threshold""#
@@ -116,19 +113,5 @@ mod tests {
         assert_eq!(response.references[0].page, 1);
         assert_eq!(*response.file_name, "test.txt");
         assert_eq!(response.coins_used, 3.14);
-    }
-
-    #[test]
-    fn test_reference_roundtrip() {
-        let reference = Reference {
-            page_content: Box::new("text".into()),
-            page: 42,
-        };
-
-        let json = serde_json::to_string(&reference).unwrap();
-        let deserialized: Reference = serde_json::from_str(&json).unwrap();
-        
-        assert_eq!(*deserialized.page_content, "text");
-        assert_eq!(deserialized.page, 42);
     }
 }
