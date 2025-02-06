@@ -9,12 +9,24 @@ pub mod endpoints;
 /// * `Models` - Endpoint for available models
 #[allow(dead_code)]
 enum GetEndpoint {
-    //#[cfg(feature = "user")]
-    #[allow(dead_code)]
+    #[cfg(feature = "user")]
+    //#[allow(dead_code)]
     User,
-    //#[cfg(feature = "model")]
-    #[allow(dead_code)]
+    #[cfg(feature = "model")]
+    //#[allow(dead_code)]
     Models,
+    #[cfg(feature = "rag")]
+    //#[allow(dead_code)]
+    RagList,
+    #[cfg(feature = "rag")]
+    //#[allow(dead_code)]
+    RagById,
+    #[cfg(feature = "agent")]
+    //#[allow(dead_code)]
+    AgentDetails,
+    #[cfg(feature = "agent")]
+    //#[allow(dead_code)]
+    AgentList,
 }
 
 /// Represents endpoints for POST requests to the Straico API
@@ -24,15 +36,28 @@ enum GetEndpoint {
 /// * `Completion` - Endpoint for prompt completion
 /// * `File` - Endpoint for file uploads
 enum PostEndpoint {
-    //#[cfg(feature = "image")]
-    #[allow(dead_code)]
-    Image,
     Completion,
-    //#[cfg(feature = "file")]
-    #[allow(dead_code)]
+    #[cfg(feature = "image")]
+    //#[allow(dead_code)]
+    Image,
+    #[cfg(feature = "file")]
+    //#[allow(dead_code)]
     File,
-    #[allow(dead_code)]
-    CreateRag,
+    #[cfg(feature = "rag")]
+    //#[allow(dead_code)]
+    RagCreate,
+    #[cfg(feature = "rag")]
+    //#[allow(dead_code)]
+    RagCompletion,
+    #[cfg(feature = "agent")]
+    //#[allow(dead_code)]
+    AgentCompletion,
+    #[cfg(feature = "agent")]
+    //#[allow(dead_code)]
+    AgentCreate,
+    #[cfg(feature = "agent")]
+    //#[allow(dead_code)]
+    AgentAddRag,
 }
 
 impl AsRef<str> for GetEndpoint {
@@ -42,8 +67,18 @@ impl AsRef<str> for GetEndpoint {
     /// A string slice containing the full URL for the endpoint
     fn as_ref(&self) -> &str {
         match self {
+            #[cfg(feature = "user")]
             GetEndpoint::User => "https://api.straico.com/v0/user",
+            #[cfg(feature = "model")]
             GetEndpoint::Models => "https://api.straico.com/v1/models",
+            #[cfg(feature = "rag")]
+            GetEndpoint::RagList => "https://api.straico.com/v0/rag/user",
+            #[cfg(feature = "rag")]
+            GetEndpoint::RagById => "https://api.straico.com/v0/rag",
+            #[cfg(feature = "agent")]
+            GetEndpoint::AgentDetails => "https://api.straico.com/v0/agent",
+            #[cfg(feature = "agent")]
+            GetEndpoint::AgentList => "https://api.straico.com/v0/agent",
         }
     }
 }
@@ -55,10 +90,21 @@ impl AsRef<str> for PostEndpoint {
     /// A string slice containing the full URL for the endpoint
     fn as_ref(&self) -> &str {
         match self {
-            PostEndpoint::Image => "https://api.straico.com/v0/image/generation",
             PostEndpoint::Completion => "https://api.straico.com/v1/prompt/completion",
+            #[cfg(feature = "image")]
+            PostEndpoint::Image => "https://api.straico.com/v0/image/generation",
+            #[cfg(feature = "file")]
             PostEndpoint::File => "https://api.straico.com/v0/file/upload",
-            PostEndpoint::CreateRag => "https://api.straico.com/v0/rag",
+            #[cfg(feature = "rag")]
+            PostEndpoint::RagCreate => "https://api.straico.com/v0/rag",
+            #[cfg(feature = "rag")]
+            PostEndpoint::RagCompletion => "https://api.straico.com/v0/rag",
+            #[cfg(feature = "agent")]
+            PostEndpoint::AgentCreate => "https://api.straico.com/v0/agent",
+            #[cfg(feature = "agent")]
+            PostEndpoint::AgentAddRag => "https://api.straico.com/v0/agent",
+            #[cfg(feature = "agent")]
+            PostEndpoint::AgentCompletion => "https://api.straico.com/v0/agent",
         }
     }
 }
