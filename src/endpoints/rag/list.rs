@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct RagList {
     #[serde(rename = "_id")]
     pub id: Box<String>,
@@ -19,7 +19,7 @@ pub struct RagList {
     pub v: u32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(transparent)]
 pub struct RagListResponseData(Vec<RagList>);
 
