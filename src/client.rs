@@ -46,9 +46,10 @@ pub struct PayloadSet;
 /// * `Api` - Represents the authentication state (NoApiKey or ApiKeySet)
 /// * `Payload` - Represents the request payload state
 /// * `Response` - The expected response type from the API
-pub struct StraicoRequestBuilder<Api, Payload, Response>(
+//pub struct StraicoRequestBuilder<Api, Payload, Response>(
+pub struct StraicoRequestBuilder<Api, Payload>(
     RequestBuilder,
-    PhantomData<Response>,
+    //PhantomData<Response>,
     PhantomData<Payload>,
     PhantomData<Api>,
 );
@@ -96,9 +97,7 @@ impl StraicoClient {
     /// # Returns
     ///
     /// A `StraicoRequestBuilder` configured for making completion requests
-    pub fn completion<'a>(
-        self,
-    ) -> StraicoRequestBuilder<NoApiKey, CompletionRequest<'a>, CompletionData> {
+    pub fn completion<'a>(self) -> StraicoRequestBuilder<NoApiKey, CompletionRequest<'a>> {
         self.0.post(PostEndpoint::Completion.as_ref()).into()
     }
 
@@ -108,7 +107,7 @@ impl StraicoClient {
     ///
     /// A `StraicoRequestBuilder` configured for making image generation requests
     #[cfg(feature = "image")]
-    pub fn image(self) -> StraicoRequestBuilder<NoApiKey, ImageRequest, ImageData> {
+    pub fn image(self) -> StraicoRequestBuilder<NoApiKey, ImageRequest> {
         self.0.post(PostEndpoint::Image.as_ref()).into()
     }
 
@@ -118,7 +117,7 @@ impl StraicoClient {
     ///
     /// A `StraicoRequestBuilder` configured for making file upload requests
     #[cfg(feature = "file")]
-    pub fn file(self) -> StraicoRequestBuilder<NoApiKey, FileRequest, FileData> {
+    pub fn file(self) -> StraicoRequestBuilder<NoApiKey, FileRequest> {
         self.0.post(PostEndpoint::File.as_ref()).into()
     }
 
@@ -128,7 +127,7 @@ impl StraicoClient {
     ///
     /// A `StraicoRequestBuilder` configured for retrieving model information
     #[cfg(feature = "model")]
-    pub fn models(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet, ModelData> {
+    pub fn models(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
         self.0.get(GetEndpoint::Models.as_ref()).into()
     }
 
@@ -138,17 +137,17 @@ impl StraicoClient {
     ///
     /// A `StraicoRequestBuilder` configured for retrieving user data
     #[cfg(feature = "user")]
-    pub fn user(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet, UserData> {
+    pub fn user(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
         self.0.get(GetEndpoint::User.as_ref()).into()
     }
 
     #[cfg(feature = "rag")]
-    pub fn create_rag(self) -> StraicoRequestBuilder<NoApiKey, RagRequest, RagData> {
+    pub fn create_rag(self) -> StraicoRequestBuilder<NoApiKey, RagRequest> {
         todo!()
     }
 }
 
-impl<T, U> StraicoRequestBuilder<NoApiKey, T, U> {
+impl<T> StraicoRequestBuilder<NoApiKey, T> {
     /// Sets the Bearer authentication token (API key) for this request
     ///
     /// # Arguments
@@ -158,15 +157,15 @@ impl<T, U> StraicoRequestBuilder<NoApiKey, T, U> {
     /// # Returns
     ///
     /// A new StraicoRequestBuilder with the ApiKeySet state, preserving the payload and response types
-    pub fn bearer_auth<K: Display>(self, api_key: K) -> StraicoRequestBuilder<ApiKeySet, T, U> {
+    pub fn bearer_auth<K: Display>(self, api_key: K) -> StraicoRequestBuilder<ApiKeySet, T> {
         self.0.bearer_auth(api_key).into()
     }
 }
 
 #[cfg(feature = "file")]
-type FormResult<T> = anyhow::Result<StraicoRequestBuilder<T, PayloadSet, FileData>>;
+type FormResult<T> = anyhow::Result<StraicoRequestBuilder<T, PayloadSet>>;
 #[cfg(feature = "file")]
-impl<T> StraicoRequestBuilder<T, FileRequest, FileData> {
+impl<T> StraicoRequestBuilder<T, FileRequest> {
     /// Creates a multipart form request for file upload
     ///
     /// # Arguments
@@ -183,7 +182,7 @@ impl<T> StraicoRequestBuilder<T, FileRequest, FileData> {
     }
 }
 
-impl<K, T: Serialize, V> StraicoRequestBuilder<K, T, V> {
+impl<K, T: Serialize> StraicoRequestBuilder<K, T> {
     /// Sets the JSON payload for the request
     ///
     /// # Arguments
@@ -193,12 +192,12 @@ impl<K, T: Serialize, V> StraicoRequestBuilder<K, T, V> {
     /// # Returns
     ///
     /// A new StraicoRequestBuilder with the PayloadSet state, preserving the API key and response types
-    pub fn json<U: Into<T>>(self, payload: U) -> StraicoRequestBuilder<K, PayloadSet, V> {
+    pub fn json<U: Into<T>>(self, payload: U) -> StraicoRequestBuilder<K, PayloadSet> {
         self.0.json(&payload.into()).into()
     }
 }
 
-impl<V: for<'a> Deserialize<'a>> StraicoRequestBuilder<ApiKeySet, PayloadSet, V> {
+impl StraicoRequestBuilder<ApiKeySet, PayloadSet> {
     /// Sends the configured request to the API and deserializes the JSON response
     ///
     /// This method will send the HTTP request that has been configured with authentication
@@ -215,7 +214,7 @@ impl<V: for<'a> Deserialize<'a>> StraicoRequestBuilder<ApiKeySet, PayloadSet, V>
     }
 }
 
-impl<T, U, V> From<RequestBuilder> for StraicoRequestBuilder<T, U, V> {
+impl<T, U> From<RequestBuilder> for StraicoRequestBuilder<T, U> {
     /// Converts a RequestBuilder into a StraicoRequestBuilder
     ///
     /// This implementation allows for easy conversion from reqwest's RequestBuilder
@@ -229,6 +228,6 @@ impl<T, U, V> From<RequestBuilder> for StraicoRequestBuilder<T, U, V> {
     ///
     /// A new StraicoRequestBuilder wrapping the provided RequestBuilder with appropriate type parameters
     fn from(value: RequestBuilder) -> Self {
-        StraicoRequestBuilder(value, PhantomData, PhantomData, PhantomData)
+        StraicoRequestBuilder(value, PhantomData, PhantomData)
     }
 }
