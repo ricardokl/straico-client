@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct RagByIdData {
     #[serde(rename = "_id")]
     pub id: Box<String>,

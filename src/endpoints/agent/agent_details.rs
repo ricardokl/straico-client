@@ -3,7 +3,7 @@ use serde::Deserialize;
 /// Represents detailed information about a specific agent
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub struct AgentDetails {
+pub struct AgentDetailsResponse {
     #[serde(rename = "_id")]
     id: Box<String>,
     uuidv4: Box<String>,
@@ -51,7 +51,7 @@ mod tests {
         }
         "#;
 
-        let details: AgentDetails = serde_json::from_str(json_data).unwrap();
+        let details: AgentDetailsResponse = serde_json::from_str(json_data).unwrap();
 
         // Test field deserialization
         assert_eq!(*details.id, "66df87d2bb560c6acabb686s");
