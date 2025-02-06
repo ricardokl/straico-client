@@ -79,6 +79,7 @@ pub enum ResponseType {
     Agent(AgentResponseType),
 }
 
+// TODO: Check If Update needs an extra variant
 #[cfg(feature = "rag")]
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
@@ -89,6 +90,7 @@ pub enum RagResponseType {
     RagList(rag::list::RagListResponseData),
 }
 
+// TODO: Check if Update Agent needs an extra variant
 #[cfg(feature = "agent")]
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
