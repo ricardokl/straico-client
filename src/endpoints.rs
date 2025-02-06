@@ -77,6 +77,27 @@ pub enum ResponseType {
     #[cfg(feature = "rag")]
     #[serde(skip_serializing)]
     RagCompletion(rag::completion::RagPromptCompletionData),
+    #[cfg(feature = "rag")]
+    #[serde(skip_serializing)]
+    RagById(rag::rag_by_id::RagByIdData),
+    #[cfg(feature = "rag")]
+    #[serde(skip_serializing)]
+    RagList(rag::list::RagListResponseData),
+    #[cfg(feature = "agent")]
+    #[serde(skip_serializing)]
+    AgentCreate(agent::create::AgentCreateResponse),
+    #[sfg(feature = "agent")]
+    #[serde(skip_serializing)]
+    AgentCompletion(agent::completion::AgentCompletionResponse),
+    #[sfg(feature = "agent")]
+    #[serde(skip_serializing)]
+    AgentList(agent::list_agents::AgentData),
+    #[sfg(feature = "agent")]
+    #[serde(skip_serializing)]
+    AgentDetails(agent::agent_details::AgentDetailsResponse),
+    #[sfg(feature = "agent")]
+    #[serde(skip_serializing)]
+    AgentAddRag(agent::rag_to_agent::RagToAgentResponse),
 }
 
 impl ApiResponseData {
