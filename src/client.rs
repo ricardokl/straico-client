@@ -20,7 +20,12 @@ use crate::endpoints::model::ModelData;
 use crate::endpoints::user::UserData;
 
 #[cfg(feature = "rag")]
-use crate::endpoints::rag::create::{RagData, RagRequest};
+use crate::endpoints::rag::{completion::RagPromptCompletionRequest, create::RagCreateRequest};
+
+#[cfg(feature = "agent")]
+use crate::endpoints::agent::{
+    completion::AgentCompletionRequest, create::AgentCreateRequest, rag_to_agent::RagToAgentRequest,
+};
 
 use crate::endpoints::{
     completion::completion_request::CompletionRequest,
@@ -142,8 +147,66 @@ impl StraicoClient {
     }
 
     #[cfg(feature = "rag")]
-    pub fn create_rag(self) -> StraicoRequestBuilder<NoApiKey, RagRequest> {
-        todo!()
+    pub fn create_rag(self) -> StraicoRequestBuilder<NoApiKey, RagCreateRequest> {
+        self.0.post(PostEndpoint::RagCreate.as_ref()).into()
+    }
+
+    #[cfg(feature = "rag")]
+    pub fn rag_by_id(self, rag_id: &str) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
+        let url = format!("{}/{}", GetEndpoint::RagById.as_ref(), rag_id);
+        self.0.get(url).into()
+    }
+
+    #[cfg(feature = "rag")]
+    pub fn rag_list(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
+        self.0.get(GetEndpoint::RagList.as_ref()).into()
+    }
+
+    #[cfg(feature = "rag")]
+    pub fn rag_prompt_completion(
+        self,
+        rag_id: &str,
+    ) -> StraicoRequestBuilder<NoApiKey, RagPromptCompletionRequest> {
+        let url = format!("{}/{}/prompt", PostEndpoint::RagCompletion.as_ref(), rag_id);
+        self.0.post(url).into()
+    }
+
+    #[cfg(feature = "agent")]
+    pub fn create_agent<'a>(self) -> StraicoRequestBuilder<NoApiKey, AgentCreateRequest<'a>> {
+        self.0.post(PostEndpoint::AgentCreate.as_ref()).into()
+    }
+
+    #[cfg(feature = "agent")]
+    pub fn list_agents(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
+        self.0.get(GetEndpoint::AgentList.as_ref()).into()
+    }
+
+    #[cfg(feature = "agent")]
+    pub fn agent_details(self, agent_id: &str) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
+        let url = format!("{}/{}", GetEndpoint::AgentDetails.as_ref(), agent_id);
+        self.0.get(url).into()
+    }
+
+    #[cfg(feature = "agent")]
+    pub fn add_rag_to_agent<'a>(
+        self,
+        agent_id: &'a str,
+    ) -> StraicoRequestBuilder<NoApiKey, RagToAgentRequest<'a>> {
+        let url = format!("{}/{}/rag", PostEndpoint::AgentAddRag.as_ref(), agent_id);
+        self.0.post(url).into()
+    }
+
+    #[cfg(feature = "agent")]
+    pub fn agent_prompt_completion<'a>(
+        self,
+        agent_id: &'a str,
+    ) -> StraicoRequestBuilder<NoApiKey, AgentCompletionRequest<'a>> {
+        let url = format!(
+            "{}/{}/prompt",
+            PostEndpoint::AgentCompletion.as_ref(),
+            agent_id
+        );
+        self.0.post(url).into()
     }
 }
 

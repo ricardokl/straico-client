@@ -54,7 +54,7 @@ pub struct SemanticRag {
 }
 
 #[derive(Serialize, Debug)]
-pub struct RagRequest {
+pub struct RagCreateRequest {
     name: String,
     description: String,
     files: Vec<String>,
