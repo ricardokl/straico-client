@@ -73,30 +73,30 @@ pub enum ResponseType {
     User(user::UserData),
     #[cfg(feature = "rag")]
     #[serde(skip_serializing)]
+    Rag(RagResponseType),
+    #[cfg(feature = "agent")]
+    #[serde(skip_serializing)]
+    Agent(AgentResponseType),
+}
+
+#[cfg(feature = "rag")]
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum RagResponseType {
     RagCreate(rag::create::RagData),
-    #[cfg(feature = "rag")]
-    #[serde(skip_serializing)]
     RagCompletion(rag::completion::RagPromptCompletionData),
-    #[cfg(feature = "rag")]
-    #[serde(skip_serializing)]
     RagById(rag::rag_by_id::RagByIdData),
-    #[cfg(feature = "rag")]
-    #[serde(skip_serializing)]
     RagList(rag::list::RagListResponseData),
-    #[cfg(feature = "agent")]
-    #[serde(skip_serializing)]
+}
+
+#[cfg(feature = "agent")]
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum AgentResponseType {
     AgentCreate(agent::create::AgentCreateResponse),
-    #[cfg(feature = "agent")]
-    #[serde(skip_serializing)]
     AgentCompletion(agent::completion::AgentCompletionResponse),
-    #[cfg(feature = "agent")]
-    #[serde(skip_serializing)]
     AgentList(agent::list_agents::AgentData),
-    #[cfg(feature = "agent")]
-    #[serde(skip_serializing)]
     AgentDetails(agent::agent_details::AgentDetailsResponse),
-    #[cfg(feature = "agent")]
-    #[serde(skip_serializing)]
     AgentAddRag(agent::rag_to_agent::RagToAgentResponse),
 }
 

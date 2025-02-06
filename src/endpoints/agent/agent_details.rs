@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 /// Represents detailed information about a specific agent
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct AgentDetailsResponse {
     #[serde(rename = "_id")]
