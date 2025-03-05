@@ -38,11 +38,11 @@ pub struct CompletionRequest<'a> {
     max_tokens: Option<u32>,
 }
 
-#[derive(Serialize, Clone)]
 /// A newtype wrapper around `Cow<'a, str>` representing a prompt message for a completion request.
 ///
 /// This struct encapsulates the actual text content of the prompt that will be used to generate
 /// completions. It can hold either borrowed or owned string data through the `Cow` type.
+#[derive(Serialize, Clone)]
 pub struct Prompt<'a>(Cow<'a, str>);
 
 impl<'a> From<Cow<'a, str>> for Prompt<'a> {

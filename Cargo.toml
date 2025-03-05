@@ -1,35 +1,19 @@
 [package]
-name = "straico"
+name = "straico-client"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "Rust client for the Straico API"
 license = "MIT"
 
-[features]
-user = []
-model = []
-image = []
-file = []
-rag = []
-agent = []
-default = ["user", "model", "image", "file", "rag"]
-# default = []
-
-[lib]
-name = "straico"
-path = "src/lib.rs"
-
-[[bin]]
-name = "straico-proxy"
-path = "src/main.rs"
+# [lib]
+# name = "straico"
+# path = "src/lib.rs"
 
 [dependencies]
 futures = "0.3.31"
 reqwest = { version = "0.12.8", features = ["json", "multipart", "stream"] }
 serde = { version = "1.0.211", default-features = false, features = ["derive"] }
 serde_json = "1.0.132"
-actix-web = { version = "4.9.0" }
-clap = { version = "4.4", features = ["derive", "env"] }
 regex = "1.11.1"
 anyhow = "1.0.93"
 tokio = { version = "1.0", features = ["full"] }

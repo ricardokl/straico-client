@@ -92,6 +92,7 @@ pub struct PromptFormat<'a> {
     /// Text to insert after assistant responses
     assistant_post: &'a str,
     /// Text to append at the very end of the prompt
+    #[allow(dead_code)]
     end: &'a str,
     pub tool_calls: ToolCallsFormat<'a>,
     pub tool_output: ToolOutputFormat<'a>,
