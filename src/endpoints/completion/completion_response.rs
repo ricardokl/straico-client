@@ -298,7 +298,10 @@ impl Serialize for FunctionData {
         use serde::ser::SerializeStruct;
         let mut state = serializer.serialize_struct("FunctionData", 2)?;
         state.serialize_field("name", &self.name)?;
-        state.serialize_field("arguments", &self.arguments.to_string())?;
+        let args_json =
+            serde_json::to_string(&self.arguments).map_err(serde::ser::Error::custom)?;
+        state.serialize_field("arguments", &args_json)?;
+        // state.serialize_field("arguments", &self.arguments.to_string())?;
         state.end()
     }
 }
@@ -393,11 +396,6 @@ impl Message {
                     );
                     let re = regex::Regex::new(pattern)?;
                     let items = re
-                        //.captures_iter(&optional_content.replace("\n", ""))
-                        // Extract couldn't understand that there is only one match
-                        // Extract return the match, and the capture group, which has only one element
-                        //.map(|cap| cap.extract::<1>().1[0].trim())
-                        // Longer but more readable:
                         .find_iter(&optional_content.replace("\n", ""))
                         .map(|c| {
                             c.as_str()

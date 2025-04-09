@@ -129,15 +129,10 @@ impl Default for ToolCallsFormat<'_> {
 impl Default for ToolOutputFormat<'_> {
     fn default() -> Self {
         ToolOutputFormat {
-            //tool_outputs_begin: "<tool_responses>",
-            // If the model doesn't have a specific tag for tool responses,
-            // we have to place it inside a user message, since the user is
-            // giving the output back
             tool_outputs_begin: "<user>",
             tool_output_begin: "<tool_response>",
             tool_output_end: "</tool_response>",
             tool_outputs_end: "</user>",
-            //tool_outputs_end: "<tool_responses>",
             end: "",
         }
     }
@@ -167,16 +162,6 @@ impl Default for PromptFormat<'_> {
             end: "<assistant>",
             tool_calls: ToolCallsFormat::default(),
             tool_output: ToolOutputFormat::default(),
-            //    PromptFormat {
-            //        begin: "",
-            //        system_pre: "",
-            //        system_post: "\n",
-            //        user_pre: "### Instruction:\n",
-            //        user_post: "\n",
-            //        assistant_pre: "### Response:\n",
-            //        assistant_post: "\n",
-            //        end: "### Response:\n",
-            //    }
         }
     }
 }
@@ -333,7 +318,16 @@ You are provided with available function signatures within <tools></tools> XML t
         //\<tool_call\>{"name": <function-name>, "arguments": <args-json-object>}\</tool_call\>
         //"###;
 
-        let post_tools: &str = &format!("\n </tools>\n # Tool Calls\n \nStart with the opening tag {}. For each tool call, return a json object with function name and arguments within {}{} tags:\n{}{{\"name\": <function-name>{} \"arguments\": <args-json-object>}}{}. close the tool calls section with {}\n", format.tool_calls.tool_calls_begin, format.tool_calls.tool_call_begin, format.tool_calls.tool_call_end, format.tool_calls.tool_call_begin, format.tool_calls.tool_sep, format.tool_calls.tool_call_end, format.tool_calls.tool_calls_end);
+        let post_tools: &str = &format!(
+            "\n </tools>\n # Tool Calls\n \nStart with the opening tag {}. For each tool call, return a json object with function name and arguments within {}{} tags:\n{}{{\"name\": <function-name>{} \"arguments\": <args-json-object>}}{}. close the tool calls section with {}\n",
+            format.tool_calls.tool_calls_begin,
+            format.tool_calls.tool_call_begin,
+            format.tool_calls.tool_call_end,
+            format.tool_calls.tool_call_begin,
+            format.tool_calls.tool_sep,
+            format.tool_calls.tool_call_end,
+            format.tool_calls.tool_calls_end
+        );
 
         let mut tools_message = String::new();
         if let Some(tools) = &tools {
