@@ -62,31 +62,55 @@ pub struct StraicoRequestBuilder<Api, Payload>(
 //    }
 //}
 
-impl From<Client> for StraicoClient {
-    fn from(value: Client) -> Self {
-        StraicoClient(value)
-    }
-}
+const API_BASE_URL: &str = "https://api.straico.com";
 
 /// A client for interacting with the Straico API
 ///
 /// Wraps a reqwest::Client and provides convenient methods for making API requests.
 /// Can be created using `StraicoClient::new()` or by converting a reqwest::Client
 /// using `Into<StraicoClient>`.
-#[derive(Clone, Default)]
-pub struct StraicoClient(Client);
+#[derive(Clone)]
+pub struct StraicoClient {
+    client: Client,
+    base_url: String,
+}
+
+impl Default for StraicoClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl StraicoClient {
     /// Creates a new instance of StraicoClient with default configuration
     ///
     /// This is a convenience constructor that creates a new reqwest::Client with default settings
-    /// and converts it into a StraicoClient.
+    /// and a base URL pointing to the production Straico API.
     ///
     /// # Returns
     ///
     /// A new StraicoClient instance ready to make API requests
     pub fn new() -> StraicoClient {
-        StraicoClient::default()
+        StraicoClient {
+            client: Client::new(),
+            base_url: API_BASE_URL.to_string(),
+        }
+    }
+
+    /// Creates a new instance of StraicoClient with a custom base URL.
+    ///
+    /// # Arguments
+    ///
+    /// * `base_url` - The base URL for the API.
+    ///
+    /// # Returns
+    ///
+    /// A new StraicoClient instance configured to use the specified base URL.
+    pub fn with_base_url(base_url: String) -> StraicoClient {
+        StraicoClient {
+            client: Client::new(),
+            base_url,
+        }
     }
 
     /// Creates a request builder for the completion endpoint
@@ -95,7 +119,8 @@ impl StraicoClient {
     ///
     /// A `StraicoRequestBuilder` configured for making completion requests
     pub fn completion<'a>(self) -> StraicoRequestBuilder<NoApiKey, CompletionRequest<'a>> {
-        self.0.post(PostEndpoint::Completion.as_ref()).into()
+        let url = format!("{}{}", self.base_url, PostEndpoint::Completion.as_ref());
+        self.client.post(url).into()
     }
 
     /// Creates a request builder for the image generation endpoint
@@ -105,7 +130,8 @@ impl StraicoClient {
     /// A `StraicoRequestBuilder` configured for making image generation requests
     #[cfg(feature = "image")]
     pub fn image(self) -> StraicoRequestBuilder<NoApiKey, ImageRequest> {
-        self.0.post(PostEndpoint::Image.as_ref()).into()
+        let url = format!("{}{}", self.base_url, PostEndpoint::Image.as_ref());
+        self.client.post(url).into()
     }
 
     /// Creates a request builder for the file upload endpoint
@@ -115,7 +141,8 @@ impl StraicoClient {
     /// A `StraicoRequestBuilder` configured for making file upload requests
     #[cfg(feature = "file")]
     pub fn file(self) -> StraicoRequestBuilder<NoApiKey, FileRequest> {
-        self.0.post(PostEndpoint::File.as_ref()).into()
+        let url = format!("{}{}", self.base_url, PostEndpoint::File.as_ref());
+        self.client.post(url).into()
     }
 
     /// Creates a request builder for fetching available models
@@ -125,7 +152,8 @@ impl StraicoClient {
     /// A `StraicoRequestBuilder` configured for retrieving model information
     #[cfg(feature = "model")]
     pub fn models(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
-        self.0.get(GetEndpoint::Models.as_ref()).into()
+        let url = format!("{}{}", self.base_url, GetEndpoint::Models.as_ref());
+        self.client.get(url).into()
     }
 
     /// Creates a request builder for fetching user information
@@ -135,23 +163,31 @@ impl StraicoClient {
     /// A `StraicoRequestBuilder` configured for retrieving user data
     #[cfg(feature = "user")]
     pub fn user(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
-        self.0.get(GetEndpoint::User.as_ref()).into()
+        let url = format!("{}{}", self.base_url, GetEndpoint::User.as_ref());
+        self.client.get(url).into()
     }
 
     #[cfg(feature = "rag")]
     pub fn create_rag(self) -> StraicoRequestBuilder<NoApiKey, RagCreateRequest> {
-        self.0.post(PostEndpoint::RagCreate.as_ref()).into()
+        let url = format!("{}{}", self.base_url, PostEndpoint::RagCreate.as_ref());
+        self.client.post(url).into()
     }
 
     #[cfg(feature = "rag")]
     pub fn rag_by_id(self, rag_id: &str) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
-        let url = format!("{}/{}", GetEndpoint::RagById.as_ref(), rag_id);
-        self.0.get(url).into()
+        let url = format!(
+            "{}{}/{}",
+            self.base_url,
+            GetEndpoint::RagById.as_ref(),
+            rag_id
+        );
+        self.client.get(url).into()
     }
 
     #[cfg(feature = "rag")]
     pub fn rag_list(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
-        self.0.get(GetEndpoint::RagList.as_ref()).into()
+        let url = format!("{}{}", self.base_url, GetEndpoint::RagList.as_ref());
+        self.client.get(url).into()
     }
 
     #[cfg(feature = "rag")]
@@ -159,24 +195,36 @@ impl StraicoClient {
         self,
         rag_id: &str,
     ) -> StraicoRequestBuilder<NoApiKey, RagPromptCompletionRequest> {
-        let url = format!("{}/{}/prompt", PostEndpoint::RagCompletion.as_ref(), rag_id);
-        self.0.post(url).into()
+        let url = format!(
+            "{}{}/{}/prompt",
+            self.base_url,
+            PostEndpoint::RagCompletion.as_ref(),
+            rag_id
+        );
+        self.client.post(url).into()
     }
 
     #[cfg(feature = "agent")]
     pub fn create_agent<'a>(self) -> StraicoRequestBuilder<NoApiKey, AgentCreateRequest<'a>> {
-        self.0.post(PostEndpoint::AgentCreate.as_ref()).into()
+        let url = format!("{}{}", self.base_url, PostEndpoint::AgentCreate.as_ref());
+        self.client.post(url).into()
     }
 
     #[cfg(feature = "agent")]
     pub fn list_agents(self) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
-        self.0.get(GetEndpoint::AgentList.as_ref()).into()
+        let url = format!("{}{}", self.base_url, GetEndpoint::AgentList.as_ref());
+        self.client.get(url).into()
     }
 
     #[cfg(feature = "agent")]
     pub fn agent_details(self, agent_id: &str) -> StraicoRequestBuilder<NoApiKey, PayloadSet> {
-        let url = format!("{}/{}", GetEndpoint::AgentDetails.as_ref(), agent_id);
-        self.0.get(url).into()
+        let url = format!(
+            "{}{}/{}",
+            self.base_url,
+            GetEndpoint::AgentDetails.as_ref(),
+            agent_id
+        );
+        self.client.get(url).into()
     }
 
     #[cfg(feature = "agent")]
@@ -184,8 +232,13 @@ impl StraicoClient {
         self,
         agent_id: &'a str,
     ) -> StraicoRequestBuilder<NoApiKey, RagToAgentRequest<'a>> {
-        let url = format!("{}/{}/rag", PostEndpoint::AgentAddRag.as_ref(), agent_id);
-        self.0.post(url).into()
+        let url = format!(
+            "{}{}/{}/rag",
+            self.base_url,
+            PostEndpoint::AgentAddRag.as_ref(),
+            agent_id
+        );
+        self.client.post(url).into()
     }
 
     #[cfg(feature = "agent")]
@@ -194,11 +247,12 @@ impl StraicoClient {
         agent_id: &'a str,
     ) -> StraicoRequestBuilder<NoApiKey, AgentCompletionRequest<'a>> {
         let url = format!(
-            "{}/{}/prompt",
+            "{}{}/{}/prompt",
+            self.base_url,
             PostEndpoint::AgentCompletion.as_ref(),
             agent_id
         );
-        self.0.post(url).into()
+        self.client.post(url).into()
     }
 }
 

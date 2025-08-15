@@ -124,11 +124,11 @@ pub struct Completion {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Usage {
     /// Number of tokens in the input/prompt text
-    prompt_tokens: u32,
+    pub prompt_tokens: u32,
     /// Number of tokens in the generated completion/output
-    completion_tokens: u32,
+    pub completion_tokens: u32,
     /// Total combined token count (prompt + completion)
-    total_tokens: u32,
+    pub total_tokens: u32,
 }
 
 /// Represents a single generated choice/response from a language model completion.
