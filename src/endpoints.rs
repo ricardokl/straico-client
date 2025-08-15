@@ -17,9 +17,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ApiResponseData {
-    success: bool,
+    pub success: bool,
     #[serde(flatten)]
-    response: ApiResponseVariant,
+    pub response: ApiResponseVariant,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
