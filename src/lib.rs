@@ -1,6 +1,7 @@
 pub mod chat;
 pub mod client;
 pub mod endpoints;
+pub mod error;
 
 /// Represents endpoints for GET requests to the Straico API
 ///

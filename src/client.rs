@@ -1,23 +1,18 @@
-use futures::TryFutureExt;
-use reqwest::{Client, RequestBuilder, Response};
-use serde::{Deserialize, Serialize};
-use std::{fmt::Display, future::Future, marker::PhantomData};
+use reqwest::{Client, RequestBuilder};
+use serde::Serialize;
+use std::{fmt::Display, marker::PhantomData};
+
+use crate::error::{self, Error};
 
 #[cfg(feature = "file")]
-use crate::endpoints::file::{FileData, FileRequest};
+use crate::endpoints::file::FileRequest;
 #[cfg(feature = "file")]
 use reqwest::multipart::Form;
 #[cfg(feature = "file")]
 use std::path::Path;
 
 #[cfg(feature = "image")]
-use crate::endpoints::image::{ImageData, ImageRequest};
-
-#[cfg(feature = "model")]
-use crate::endpoints::model::ModelData;
-
-#[cfg(feature = "user")]
-use crate::endpoints::user::UserData;
+use crate::endpoints::image::ImageRequest;
 
 #[cfg(feature = "rag")]
 use crate::endpoints::rag::{completion::RagPromptCompletionRequest, create::RagCreateRequest};
@@ -27,10 +22,7 @@ use crate::endpoints::agent::{
     completion::AgentCompletionRequest, create::AgentCreateRequest, rag_to_agent::RagToAgentRequest,
 };
 
-use crate::endpoints::{
-    completion::completion_request::CompletionRequest,
-    completion::completion_response::CompletionData, ApiResponseData,
-};
+use crate::endpoints::{completion::completion_request::CompletionRequest, ApiResponseData};
 
 #[cfg(any(feature = "model", feature = "user"))]
 use crate::GetEndpoint;
@@ -225,8 +217,8 @@ impl<T> StraicoRequestBuilder<NoApiKey, T> {
     }
 }
 
-#[cfg(feature = "file")]
-type FormResult<T> = anyhow::Result<StraicoRequestBuilder<T, PayloadSet>>;
+pub type Result<T> = std::result::Result<T, Error>;
+
 #[cfg(feature = "file")]
 impl<T> StraicoRequestBuilder<T, FileRequest> {
     /// Creates a multipart form request for file upload
@@ -239,7 +231,10 @@ impl<T> StraicoRequestBuilder<T, FileRequest> {
     ///
     /// A Result containing a new StraicoRequestBuilder configured with the multipart form,
     /// or an error if file creation fails
-    pub async fn multipart<U: AsRef<Path>>(self, file: U) -> FormResult<T> {
+    pub async fn multipart<U: AsRef<Path>>(
+        self,
+        file: U,
+    ) -> Result<StraicoRequestBuilder<T, PayloadSet>> {
         let form = Form::new().file("file", file).await?;
         Ok(self.0.multipart(form).into())
     }
@@ -272,8 +267,10 @@ impl StraicoRequestBuilder<ApiKeySet, PayloadSet> {
     /// A Future that resolves to a Result containing either:
     /// - The deserialized API response data of type `ApiResponseData<V>`
     /// - A reqwest error if the request fails or JSON parsing fails
-    pub fn send(self) -> impl Future<Output = reqwest::Result<ApiResponseData>> {
-        self.0.send().and_then(Response::json)
+    pub async fn send(self) -> Result<ApiResponseData> {
+        let response = self.0.send().await?;
+        let data = response.json().await?;
+        Ok(data)
     }
 }
 
