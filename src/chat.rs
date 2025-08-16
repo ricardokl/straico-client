@@ -14,7 +14,7 @@ use std::ops::Deref;
 /// This struct implements `Deref` to provide direct access to the underlying vector
 /// operations while maintaining type safety and encapsulation.
 #[derive(Deserialize, Clone, Debug)]
-pub struct Chat(Vec<Message>);
+pub struct Chat(pub Vec<Message>);
 
 impl Deref for Chat {
     type Target = Vec<Message>;
@@ -354,12 +354,12 @@ You are provided with available function signatures within <tools></tools> XML t
                 (_, Message::User { content }) => {
                     if i == 0 {
                         output.push_str(&format!(
-                            "{}You are a helpful assistant.\n{}{}\n",
+                            "{}You are a helpful assistant.\n{}{}",
                             format.system_pre, &tools_message, format.system_post
                         ))
                     }
                     output.push_str(&format!(
-                        "{}{}\n{}\n",
+                        "{}{}{}",
                         format.user_pre, content, format.user_post
                     ));
                 }

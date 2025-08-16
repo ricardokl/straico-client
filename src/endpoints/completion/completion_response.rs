@@ -124,11 +124,11 @@ pub struct Completion {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Usage {
     /// Number of tokens in the input/prompt text
-    prompt_tokens: u32,
+    pub prompt_tokens: u32,
     /// Number of tokens in the generated completion/output
-    completion_tokens: u32,
+    pub completion_tokens: u32,
     /// Total combined token count (prompt + completion)
-    total_tokens: u32,
+    pub total_tokens: u32,
 }
 
 /// Represents a single generated choice/response from a language model completion.
@@ -284,9 +284,9 @@ pub enum ToolCall {
 #[derive(Deserialize, Clone, Debug)]
 pub struct FunctionData {
     /// The name of the function to call
-    name: String,
+    pub name: String,
     /// The arguments to pass to the function as a JSON Value
-    arguments: Value,
+    pub arguments: Value,
 }
 
 // Custom serializer to convert Value to String

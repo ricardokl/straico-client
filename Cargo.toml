@@ -22,3 +22,6 @@ tokio = { version = "1.0", features = ["full"] }
 lto = true
 codegen-units = 1
 panic = "abort"
+
+[dev-dependencies]
+mockito = "1.5.0"

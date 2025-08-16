@@ -26,31 +26,41 @@ pub struct StraicoRequestBuilder<Api, Payload>(
     PhantomData<Api>,
 );
 
-impl From<Client> for StraicoClient {
-    fn from(value: Client) -> Self {
-        StraicoClient(value)
-    }
-}
-
 /// A client for interacting with the Straico API
 ///
 /// Wraps a reqwest::Client and provides convenient methods for making API requests.
 /// Can be created using `StraicoClient::new()` or by converting a reqwest::Client
 /// using `Into<StraicoClient>`.
-#[derive(Clone, Default)]
-pub struct StraicoClient(Client);
+#[derive(Clone)]
+pub struct StraicoClient {
+    client: Client,
+    host: String,
+}
 
 impl StraicoClient {
     /// Creates a new instance of StraicoClient with default configuration
     ///
     /// This is a convenience constructor that creates a new reqwest::Client with default settings
-    /// and converts it into a StraicoClient.
+    /// and a default host.
     ///
     /// # Returns
     ///
     /// A new StraicoClient instance ready to make API requests
     pub fn new() -> StraicoClient {
-        StraicoClient::default()
+        StraicoClient {
+            client: Client::new(),
+            host: "https://api.straico.com".to_string(),
+        }
+    }
+
+    /// Creates a new instance of StraicoClient with a custom host
+    ///
+    /// This is a constructor for testing purposes.
+    pub fn new_with_host(host: &str) -> StraicoClient {
+        StraicoClient {
+            client: Client::new(),
+            host: host.to_string(),
+        }
     }
 
     /// Creates a request builder for the completion endpoint
@@ -59,8 +69,8 @@ impl StraicoClient {
     ///
     /// A `StraicoRequestBuilder` configured for making completion requests
     pub fn completion<'a>(self) -> StraicoRequestBuilder<NoApiKey, CompletionRequest<'a>> {
-        self.0
-            .post("https://api.straico.com/v1/prompt/completion")
+        self.client
+            .post(format!("{}/v1/prompt/completion", self.host))
             .into()
     }
 }
