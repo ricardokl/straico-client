@@ -2,7 +2,7 @@ use crate::chat::{
     ANTHROPIC_PROMPT_FORMAT, COMMAND_R_PROMPT_FORMAT, DEEPSEEK_PROMPT_FORMAT, LLAMA3_PROMPT_FORMAT,
     MISTRAL_PROMPT_FORMAT, PromptFormat, QWEN_PROMPT_FORMAT,
 };
-use anyhow::Result;
+use crate::error::StraicoError;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -328,7 +328,7 @@ impl Completion {
     ///
     /// # Returns
     /// Returns the processed completion wrapped in a Result
-    pub fn parse(mut self) -> Result<Completion> {
+    pub fn parse(mut self) -> Result<Completion, StraicoError> {
         for x in self.choices.iter_mut() {
             x.message.tool_calls_response(&self.model)?;
             if let Message::Assistant { content, .. } = &x.message {
@@ -358,7 +358,7 @@ impl Message {
     /// # Returns
     /// - `Ok(())` if processing succeeds or if no tool calls are found
     /// - `Err` if JSON parsing fails
-    fn tool_calls_response(&mut self, model: &str) -> Result<()> {
+    fn tool_calls_response(&mut self, model: &str) -> Result<(), StraicoError> {
         // Get the appropriate prompt format based on the model
         let format = if model.to_lowercase().contains("anthropic") {
             ANTHROPIC_PROMPT_FORMAT
