@@ -1,9 +1,11 @@
-use anyhow::Result;
-use straico::client::StraicoClient;
-use straico::endpoints::completion::completion_request::CompletionRequest;
+use straico_client::{
+    client::StraicoClient,
+    endpoints::completion::completion_request::CompletionRequest,
+    error::StraicoError,
+};
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), StraicoError> {
     // Initialize the StraicoClient
     let client = StraicoClient::new();
 

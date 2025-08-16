@@ -1,6 +1,6 @@
 pub mod completion;
 
-use anyhow::Result;
+use crate::error::StraicoError;
 use completion::completion_response::CompletionData;
 use serde::{Deserialize, Serialize};
 
@@ -19,10 +19,12 @@ pub enum ApiResponseVariant {
 }
 
 impl ApiResponseData {
-    pub fn get_completion(self) -> Result<completion::completion_response::Completion> {
+    pub fn get_completion(
+        self,
+    ) -> Result<completion::completion_response::Completion, StraicoError> {
         match self.response {
             ApiResponseVariant::Data { data } => Ok(data.get_completion_data()),
-            ApiResponseVariant::Error { error } => Err(anyhow::Error::msg(error)),
+            ApiResponseVariant::Error { error } => Err(StraicoError::Api(error)),
         }
     }
 }

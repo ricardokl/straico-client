@@ -1,9 +1,11 @@
-use futures::TryFutureExt;
-use reqwest::{Client, RequestBuilder, Response};
+use reqwest::{Client, RequestBuilder};
 use serde::Serialize;
-use std::{fmt::Display, future::Future, marker::PhantomData};
+use std::{fmt::Display, marker::PhantomData};
 
-use crate::endpoints::{completion::completion_request::CompletionRequest, ApiResponseData};
+use crate::{
+    endpoints::{completion::completion_request::CompletionRequest, ApiResponseData},
+    error::StraicoError,
+};
 
 /// Represents the state where no API key has been set for the request
 pub struct NoApiKey;
@@ -107,8 +109,10 @@ impl StraicoRequestBuilder<ApiKeySet, PayloadSet> {
     /// A Future that resolves to a Result containing either:
     /// - The deserialized API response data of type `ApiResponseData<V>`
     /// - A reqwest error if the request fails or JSON parsing fails
-    pub fn send(self) -> impl Future<Output = reqwest::Result<ApiResponseData>> {
-        self.0.send().and_then(Response::json)
+    pub async fn send(self) -> Result<ApiResponseData, StraicoError> {
+        let response = self.0.send().await?;
+        let json = response.json().await?;
+        Ok(json)
     }
 }
 
